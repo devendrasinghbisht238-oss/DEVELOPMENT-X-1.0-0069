@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+   <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
-  <!-- Instant Email Service Script -->
+  <!-- EmailJS Official SDK -->
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
@@ -99,7 +100,7 @@
     <div class="grid-2">
       <div class="glass">
         <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
-        <button class="btn-emergency" onclick="sendInstantEmail()">
+        <button class="btn-emergency" onclick="sendRealEmail()">
           <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: SEND INSTANT EMAIL ALERT
         </button>
       </div>
@@ -145,6 +146,12 @@
   </div>
 
   <script>
+    // 1. Initialize EmailJS with Public Key
+    // NOTE: Apni Public Key niche "YOUR_PUBLIC_KEY" ki jagah paste karein
+    (function(){
+        emailjs.init("YOUR_PUBLIC_KEY"); 
+    })();
+
     let activeIp = "192.168.4.1";
 
     function switchSlide(n, evt) {
@@ -159,34 +166,27 @@
       document.getElementById('streamFeed').src = activeIp.startsWith("http") ? `${activeIp}/stream` : `http://${activeIp}:81/stream`;
     }
 
-    // Direct Instant Dispatch Function
-    function sendInstantEmail() {
-      appendLog("⚡ Initiating Instant Emergency Dispatch...");
-      
-      // Parallel Request to UiPath Cloud Endpoint
-      const uipathUrl = "https://cloud.uipath.com/8eb225f2-322e-4cba-9d5a-9a43ad1d97fa/83f9ba01-516e-4d77-b712-afb0cc702801/orchestrator_/api/services/app/QueueItems/AddQueueItem";
-      
-      fetch(uipathUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          "itemData": {
-            "Name": "developmentX_Emergency_Queue",
-            "Priority": "High",
-            "SpecificContent": {
-              "Project": "developmentX 1.0",
-              "Action": "INSTANT_EMERGENCY_DISPATCH",
-              "Timestamp": new Date().toISOString()
-            }
-          }
-        })
-      }).catch(err => {});
+    // Direct Instant Email Sender via EmailJS
+    function sendRealEmail() {
+      appendLog("⚡ Initiating Instant Emergency Dispatch via EmailJS...");
 
-      // Simulate Instant Direct Dispatch Success
-      setTimeout(() => {
-        appendLog("[SUCCESS ⚡] High-Priority Emergency Email Dispatched to devendrasinghbisht238@gmail.com!");
-        alert("🚨 EMERGENCY ALERT SENT!\n\nEmail Notification dispatched to devendrasinghbisht238@gmail.com in 1 second!");
-      }, 800);
+      const serviceID = "service_dseu9te";
+      const templateID = "template_mqjs1db";
+
+      const templateParams = {
+        to_name: "Devendra",
+        message: "🚨 EMERGENCY ALERT: developmentX 1.0 Hazard Detected! Immediate attention required.",
+        reply_to: "devendrasinghbisht238@gmail.com"
+      };
+
+      emailjs.send(serviceID, templateID, templateParams)
+        .then(function(response) {
+            appendLog("[SUCCESS ⚡] Email Delivered to Inbox! Status: " + response.status);
+            alert("🚨 EMERGENCY EMAIL SENT!\n\nCheck your Gmail inbox now.");
+        }, function(error) {
+            appendLog("[ERROR ❌] Email dispatch failed: " + JSON.stringify(error), true);
+            alert("Dispatch error. Check Console Logs.");
+        });
     }
 
     function appendLog(msg, isErr = false) {
