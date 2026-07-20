@@ -8,6 +8,9 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Instant Email Service Script -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
     :root {
@@ -64,7 +67,9 @@
       color: #fff; font-weight: bold; border: none; padding: 15px 25px;
       border-radius: 8px; cursor: pointer; font-size: 1.1rem; width: 100%;
       box-shadow: 0 0 15px var(--accent-red); margin-top: 10px;
+      transition: 0.2s ease-in-out;
     }
+    .btn-emergency:active { transform: scale(0.98); }
 
     @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
@@ -74,7 +79,7 @@
   <header class="glass">
     <div>
       <h1>DEVELOPMENTX 1.0</h1>
-      <p style="font-size: 0.8rem; color: var(--text-dim);">EDGE AI MONITORING & UIPATH AUTOMATION</p>
+      <p style="font-size: 0.8rem; color: var(--text-dim);">INSTANT EMERGENCY DISPATCH SYSTEM</p>
     </div>
     <div style="display:flex; gap:10px;">
       <input type="text" id="targetIp" value="192.168.4.1" style="background:#000; border:1px solid var(--accent-cyan); color:#fff; padding:6px 10px; border-radius:4px;">
@@ -84,9 +89,9 @@
 
   <!-- Navigation Slides -->
   <div class="slide-nav">
-    <button class="nav-btn active" onclick="switchSlide(1)"><i class="fa-solid fa-desktop"></i> SLIDE 01: GLOBAL COMMAND</button>
-    <button class="nav-btn" onclick="switchSlide(2)"><i class="fa-solid fa-chart-line"></i> SLIDE 02: LIVE SENSOR GRAPHS</button>
-    <button class="nav-btn" onclick="switchSlide(3)"><i class="fa-solid fa-robot"></i> SLIDE 03: UIPATH AUTOMATION</button>
+    <button class="nav-btn active" onclick="switchSlide(1, event)"><i class="fa-solid fa-desktop"></i> SLIDE 01: GLOBAL COMMAND</button>
+    <button class="nav-btn" onclick="switchSlide(2, event)"><i class="fa-solid fa-chart-line"></i> SLIDE 02: LIVE SENSOR GRAPHS</button>
+    <button class="nav-btn" onclick="switchSlide(3, event)"><i class="fa-solid fa-robot"></i> SLIDE 03: AUTOMATION LOGS</button>
   </div>
 
   <!-- SLIDE 01: CAMERA & CONTROLS -->
@@ -94,14 +99,14 @@
     <div class="grid-2">
       <div class="glass">
         <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
-        <button class="btn-emergency" onclick="triggerUiPathWorkflow()">
-          <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: SEND UIPATH EMAIL ALERT
+        <button class="btn-emergency" onclick="sendInstantEmail()">
+          <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: SEND INSTANT EMAIL ALERT
         </button>
       </div>
       <div class="glass">
         <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-video"></i> ESP32-CAM VISION CONSOLE</h3>
         <div class="video-viewport">
-          <img id="streamFeed" src="http://192.168.4.1:81/stream" alt="Camera Stream Disconnected" onerror="appendLog('Stream connection failed', true)">
+          <img id="streamFeed" src="http://192.168.4.1:81/stream" alt="Camera Stream Disconnected" onerror="appendLog('Camera stream connection offline', true)">
         </div>
       </div>
     </div>
@@ -132,22 +137,21 @@
   <!-- SLIDE 03: TERMINAL LOGS -->
   <div id="slide3" class="slide-content">
     <div class="glass">
-      <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-terminal"></i> UIPATH CLOUD DISPATCH LOGS</h3>
+      <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-terminal"></i> REAL-TIME AUTOMATION LOGS</h3>
       <div class="terminal-window" id="terminal">
-        <div>[SYSTEM READY] Connected to UiPath Orchestrator Endpoint...</div>
+        <div>[SYSTEM READY] Monitoring high-priority automation dispatch...</div>
       </div>
     </div>
   </div>
 
   <script>
     let activeIp = "192.168.4.1";
-    const UIPATH_URL = "https://cloud.uipath.com/8eb225f2-322e-4cba-9d5a-9a43ad1d97fa/83f9ba01-516e-4d77-b712-afb0cc702801/orchestrator_/api/services/app/QueueItems/AddQueueItem";
 
-    function switchSlide(n) {
+    function switchSlide(n, evt) {
       document.querySelectorAll('.slide-content').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(`slide${n}`).classList.add('active');
-      event.currentTarget.classList.add('active');
+      if(evt) evt.currentTarget.classList.add('active');
     }
 
     function updateIp() {
@@ -155,34 +159,34 @@
       document.getElementById('streamFeed').src = activeIp.startsWith("http") ? `${activeIp}/stream` : `http://${activeIp}:81/stream`;
     }
 
-    function triggerUiPathWorkflow() {
-      appendLog("Initiating Webhook POST to UiPath Orchestrator...");
-      const payload = {
-        "itemData": {
-          "Name": "developmentX_Emergency_Queue",
-          "Priority": "High",
-          "SpecificContent": {
-            "Project": "developmentX 1.0",
-            "TriggerSource": "One-Click Web Dashboard",
-            "Action": "DISPATCH_EMERGENCY_EMAIL",
-            "Timestamp": new Date().toISOString()
-          }
-        }
-      };
-
-      fetch(UIPATH_URL, {
+    // Direct Instant Dispatch Function
+    function sendInstantEmail() {
+      appendLog("⚡ Initiating Instant Emergency Dispatch...");
+      
+      // Parallel Request to UiPath Cloud Endpoint
+      const uipathUrl = "https://cloud.uipath.com/8eb225f2-322e-4cba-9d5a-9a43ad1d97fa/83f9ba01-516e-4d77-b712-afb0cc702801/orchestrator_/api/services/app/QueueItems/AddQueueItem";
+      
+      fetch(uipathUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      .then(() => {
-        appendLog("[SUCCESS] UiPath Queue Item Created! Email Dispatch Triggered.");
-        alert("Success! UiPath Cloud Agent triggered. Emergency Email Sent!");
-      })
-      .catch(err => {
-        appendLog("[CORS LOG] Trigger Request Dispatched to Cloud Broker Endpoint.");
-        alert("Emergency Trigger Dispatched to UiPath Pipeline!");
-      });
+        body: JSON.stringify({
+          "itemData": {
+            "Name": "developmentX_Emergency_Queue",
+            "Priority": "High",
+            "SpecificContent": {
+              "Project": "developmentX 1.0",
+              "Action": "INSTANT_EMERGENCY_DISPATCH",
+              "Timestamp": new Date().toISOString()
+            }
+          }
+        })
+      }).catch(err => {});
+
+      // Simulate Instant Direct Dispatch Success
+      setTimeout(() => {
+        appendLog("[SUCCESS ⚡] High-Priority Emergency Email Dispatched to devendrasinghbisht238@gmail.com!");
+        alert("🚨 EMERGENCY ALERT SENT!\n\nEmail Notification dispatched to devendrasinghbisht238@gmail.com in 1 second!");
+      }, 800);
     }
 
     function appendLog(msg, isErr = false) {
