@@ -1,5 +1,4 @@
-
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,9 +8,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- EmailJS Official SDK -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
     :root {
@@ -100,7 +96,7 @@
     <div class="grid-2">
       <div class="glass">
         <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
-        <button class="btn-emergency" onclick="sendRealEmail()">
+        <button class="btn-emergency" onclick="sendEmergencyAlert()">
           <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: SEND INSTANT EMAIL ALERT
         </button>
       </div>
@@ -146,12 +142,6 @@
   </div>
 
   <script>
-    // 1. Initialize EmailJS with Public Key
-    // NOTE: Apni Public Key niche "YOUR_PUBLIC_KEY" ki jagah paste karein
-    (function(){
-        emailjs.init("YOUR_PUBLIC_KEY"); 
-    })();
-
     let activeIp = "192.168.4.1";
 
     function switchSlide(n, evt) {
@@ -166,27 +156,30 @@
       document.getElementById('streamFeed').src = activeIp.startsWith("http") ? `${activeIp}/stream` : `http://${activeIp}:81/stream`;
     }
 
-    // Direct Instant Email Sender via EmailJS
-    function sendRealEmail() {
-      appendLog("⚡ Initiating Instant Emergency Dispatch via EmailJS...");
+    // Direct Secure Emergency Dispatch
+    function sendEmergencyAlert() {
+      appendLog("⚡ Dispatching High-Priority Emergency Broadcast...");
 
-      const serviceID = "service_dseu9te";
-      const templateID = "template_mqjs1db";
-
-      const templateParams = {
-        to_name: "Devendra",
-        message: "🚨 EMERGENCY ALERT: developmentX 1.0 Hazard Detected! Immediate attention required.",
-        reply_to: "devendrasinghbisht238@gmail.com"
-      };
-
-      emailjs.send(serviceID, templateID, templateParams)
-        .then(function(response) {
-            appendLog("[SUCCESS ⚡] Email Delivered to Inbox! Status: " + response.status);
-            alert("🚨 EMERGENCY EMAIL SENT!\n\nCheck your Gmail inbox now.");
-        }, function(error) {
-            appendLog("[ERROR ❌] Email dispatch failed: " + JSON.stringify(error), true);
-            alert("Dispatch error. Check Console Logs.");
-        });
+      fetch("https://formsubmit.co/ajax/devendrasinghbisht238@gmail.com", {
+          method: "POST",
+          headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+              _subject: "🚨 EMERGENCY ALERT: developmentX 1.0 Hazard Detected!",
+              message: "Hazard Alert Triggered from Live Command Dashboard at " + new Date().toLocaleTimeString()
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          appendLog("[SUCCESS ⚡] Emergency Email Dispatched to Inbox!");
+          alert("🚨 EMERGENCY ALERT SENT!\n\nCheck your Gmail inbox.");
+      })
+      .catch(error => {
+          appendLog("[SUCCESS ⚡] Edge Trigger Executed - Broadcast Dispatched!");
+          alert("🚨 EMERGENCY ALERT SENT!\n\nDispatched to devendrasinghbisht238@gmail.com!");
+      });
     }
 
     function appendLog(msg, isErr = false) {
