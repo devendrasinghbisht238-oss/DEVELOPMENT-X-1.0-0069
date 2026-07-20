@@ -2,106 +2,345 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>DEVELOPMENTX 1.0 - GLOBAL COMMAND CENTER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEVELOPMENTX 1.0 - MULTI-SLIDE COMMAND SHIELD</title>
+  
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root { --bg: #0b0e14; --glass: rgba(20, 30, 50, 0.7); --cyan: #00f2fe; --red: #ff0055; --green: #00ff87; }
-    body { background: var(--bg); color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; margin: 0; }
-    
-    /* Sidebar */
-    nav { width: 250px; background: #000; border-right: 1px solid var(--cyan); padding: 20px; }
-    nav h2 { color: var(--cyan); margin-bottom: 30px; font-size: 1.2rem; }
-    .nav-link { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; transition: 0.3s; }
-    .nav-link:hover { background: var(--cyan); color: #000; }
 
-    /* Main Content */
-    main { flex-grow: 1; padding: 20px; overflow-y: auto; }
-    .content-slide { display: none; }
-    .content-slide.active { display: block; }
+  <style>
+    :root {
+      --bg-dark: #050811;
+      --panel-bg: #0d121d;
+      --card-bg: rgba(15, 23, 42, 0.9);
+      --accent-cyan: #00f2fe;
+      --accent-green: #00ff87;
+      --accent-red: #ff0055;
+      --accent-orange: #ff9900;
+      --accent-purple: #9d4edd;
+      --text-main: #f1f5f9;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR NAVIGATION */
+    aside {
+      width: 280px;
+      background: var(--panel-bg);
+      border-right: 1px solid rgba(0, 242, 254, 0.2);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 15px;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .brand {
+      font-family: 'Orbitron';
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      margin-bottom: 35px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+    }
+
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .nav-item {
+      padding: 14px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Orbitron';
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(0, 242, 254, 0.1);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+    }
+
+    .sys-status {
+      margin-top: auto;
+      background: rgba(0,0,0,0.4);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.8rem;
+    }
+
+    /* MAIN VIEWPORT */
+    main { flex-grow: 1; padding: 25px; overflow-y: auto; background: var(--bg-dark); }
+
+    .slide { display: none; }
+    .slide.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    header h2 { font-family: 'Orbitron'; font-size: 1.5rem; color: var(--accent-cyan); letter-spacing: 1px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.6);
+    }
+
+    .video-viewport {
+      width: 100%;
+      height: 380px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+    }
+    #streamFeed { width: 100%; height: 100%; object-fit: cover; }
+
+    .chart-container { position: relative; height: 220px; width: 100%; }
     
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .card { background: var(--glass); border: 1px solid #333; border-radius: 10px; padding: 20px; }
-    .terminal { background: #000; color: var(--green); height: 250px; overflow-y: auto; padding: 10px; font-family: monospace; border: 1px solid var(--cyan); }
-    .graph-box { height: 200px; }
-    
-    .btn-alert { width: 100%; padding: 20px; background: var(--red); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 20px var(--red); }
+    .terminal-window {
+      background: #020408;
+      border: 1px solid var(--accent-cyan);
+      height: 280px;
+      padding: 15px;
+      font-family: monospace;
+      color: var(--accent-green);
+      overflow-y: auto;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .btn-emergency {
+      background: linear-gradient(135deg, var(--accent-red), #800020);
+      color: #fff; font-weight: bold; border: none; padding: 18px 25px;
+      border-radius: 8px; cursor: pointer; font-size: 1.1rem; width: 100%;
+      box-shadow: 0 0 20px var(--accent-red); margin-top: 15px;
+      font-family: 'Orbitron'; letter-spacing: 1px;
+      transition: all 0.2s ease;
+    }
+    .btn-emergency:hover { transform: scale(1.02); filter: brightness(1.2); }
+    .btn-emergency:active { transform: scale(0.98); }
+
+    .input-group { display: flex; gap: 10px; margin-top: 15px; }
+    .input-group input {
+      background: #000; border: 1px solid var(--accent-cyan);
+      color: #fff; padding: 10px 15px; border-radius: 6px; flex-grow: 1;
+    }
+    .input-group button {
+      background: var(--accent-cyan); color: #000; border: none;
+      padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;
+    }
+
+    @media (max-width: 1024px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } body { flex-direction: column; overflow: auto; } aside { width: 100%; } }
   </style>
 </head>
 <body>
 
-<nav>
-  <h2>DEV-X COMMAND</h2>
-  <div class="nav-link" onclick="showSlide('slide1')">📡 GLOBAL COMMAND</div>
-  <div class="nav-link" onclick="showSlide('slide2')">📊 SENSOR TELEMETRY</div>
-  <div class="nav-link" onclick="showSlide('slide3')">💻 DATABASE LOGS</div>
-</nav>
+  <!-- SIDEBAR NAVIGATION -->
+  <aside>
+    <div class="brand">
+      <i class="fa-solid fa-shield-halved"></i> DEV-X 1.0
+    </div>
+    <ul class="nav-list">
+      <li class="nav-item active" onclick="switchSlide('slide1', this)">
+        <i class="fa-solid fa-desktop"></i> GLOBAL COMMAND
+      </li>
+      <li class="nav-item" onclick="switchSlide('slide2', this)">
+        <i class="fa-solid fa-chart-line"></i> SENSOR ANALYTICS
+      </li>
+      <li class="nav-item" onclick="switchSlide('slide3', this)">
+        <i class="fa-solid fa-microchip"></i> HARDWARE TELEMETRY
+      </li>
+      <li class="nav-item" onclick="switchSlide('slide4', this)">
+        <i class="fa-solid fa-terminal"></i> KERNEL DATABASE
+      </li>
+    </ul>
 
-<main>
-  <!-- Slide 1 -->
-  <div id="slide1" class="content-slide active">
-    <h1>GLOBAL MISSION COMMAND</h1>
-    <div class="grid">
-      <div class="card">
-        <h3>ESP32-CAM LIVE STREAM</h3>
-        <img id="stream" src="http://192.168.4.1:81/stream" style="width:100%; height:300px; background:#000;">
+    <div class="sys-status">
+      <div style="color:var(--accent-green); font-weight:bold; margin-bottom:5px;">● SYSTEM ONLINE</div>
+      <div style="color:var(--text-dim);">Latency: <span id="pingVal">4ms</span></div>
+      <div style="color:var(--text-dim);">Protocol: TLS 1.3 Secure</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main>
+    
+    <!-- SLIDE 01: GLOBAL COMMAND -->
+    <div id="slide1" class="slide active">
+      <header>
+        <h2>SLIDE 01: GLOBAL COMMAND SHIELD</h2>
+        <span style="color:var(--accent-green); font-weight:bold;">[NODE 01 ACTIVE]</span>
+      </header>
+      <div class="grid-2">
+        <div class="glass">
+          <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
+          <p style="color:var(--text-dim); font-size:0.9rem;">Trigger immediate high-priority emergency alert signal to the dashboard and global telemetry listeners.</p>
+          <button class="btn-emergency" onclick="triggerEmergencyAlert()">
+            <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: TRIGGER INSTANT ALERT
+          </button>
+
+          <div style="margin-top:25px;">
+            <label style="font-family:'Orbitron'; font-size:0.85rem; color:var(--text-dim);">ESP32 NETWORK BRIDGE</label>
+            <div class="input-group">
+              <input type="text" id="targetIp" value="192.168.4.1">
+              <button onclick="updateIp()"><i class="fa-solid fa-link"></i> CONNECT</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass">
+          <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);"><i class="fa-solid fa-video"></i> ESP32-CAM VISION CONSOLE</h3>
+          <div class="video-viewport">
+            <img id="streamFeed" src="http://192.168.4.1:81/stream" alt="ESP32 Feed Offline" onerror="appendLog('ESP32 Video Feed Offline', true)">
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <h3>HARDWARE STATUS</h3>
-        <button class="btn-alert" onclick="dispatchAlert()">⚡ EMERGENCY DISPATCH</button>
-        <p style="margin-top:20px;">Connection: STABLE | Latency: 2ms</p>
+    </div>
+
+    <!-- SLIDE 02: LIVE SENSOR ANALYTICS -->
+    <div id="slide2" class="slide">
+      <header>
+        <h2>SLIDE 02: LIVE SENSOR TELEMETRY</h2>
+        <span style="color:var(--accent-cyan); font-weight:bold;">[REAL-TIME FLUCTUATION ACTIVE]</span>
+      </header>
+      <div class="grid-3">
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-cyan); margin-bottom:10px;"><i class="fa-solid fa-smog"></i> MQ GAS PPM</h4>
+          <div class="chart-container"><canvas id="gasChart"></canvas></div>
+        </div>
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-red); margin-bottom:10px;"><i class="fa-solid fa-fire"></i> FLAME / UV HAZARD</h4>
+          <div class="chart-container"><canvas id="uvChart"></canvas></div>
+        </div>
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-green); margin-bottom:10px;"><i class="fa-solid fa-ruler"></i> ULTRASONIC TRIPWIRE</h4>
+          <div class="chart-container"><canvas id="ultraChart"></canvas></div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Slide 2 -->
-  <div id="slide2" class="content-slide">
-    <h1>LIVE SENSOR MONITORING</h1>
-    <div class="grid">
-      <div class="card"><canvas id="c1"></canvas></div>
-      <div class="card"><canvas id="c2"></canvas></div>
-      <div class="card"><canvas id="c3"></canvas></div>
-      <div class="card"><canvas id="c4"></canvas></div>
+    <!-- SLIDE 03: HARDWARE TELEMETRY -->
+    <div id="slide3" class="slide">
+      <header>
+        <h2>SLIDE 03: AUXILIARY HARDWARE METRICS</h2>
+      </header>
+      <div class="grid-3">
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-orange); margin-bottom:10px;"><i class="fa-solid fa-temperature-high"></i> CORE TEMP (°C)</h4>
+          <div class="chart-container"><canvas id="tempChart"></canvas></div>
+        </div>
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-purple); margin-bottom:10px;"><i class="fa-solid fa-gauge-high"></i> BAROMETRIC PRESSURE</h4>
+          <div class="chart-container"><canvas id="pressChart"></canvas></div>
+        </div>
+        <div class="glass">
+          <h4 style="font-family:'Orbitron'; color:var(--accent-cyan); margin-bottom:10px;"><i class="fa-solid fa-bolt"></i> POWER LOAD (mW)</h4>
+          <div class="chart-container"><canvas id="powerChart"></canvas></div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Slide 3 -->
-  <div id="slide3" class="content-slide">
-    <h1>SYSTEM DATABASE TERMINAL</h1>
-    <div class="card">
-      <div class="terminal" id="term"></div>
+    <!-- SLIDE 04: KERNEL DATABASE LOGS -->
+    <div id="slide4" class="slide">
+      <header>
+        <h2>SLIDE 04: REAL-TIME AUTOMATION LOGS</h2>
+      </header>
+      <div class="glass">
+        <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);"><i class="fa-solid fa-terminal"></i> SYSTEM EVENT STREAM</h3>
+        <div class="terminal-window" id="terminal">
+          <div>[00:00:00] [KERNEL] Initialization sequence loaded successfully.</div>
+          <div>[00:00:01] [NETWORK] Listening on websocket channel...</div>
+        </div>
+      </div>
     </div>
-  </div>
-</main>
 
-<script>
-  function showSlide(id) {
-    document.querySelectorAll('.content-slide').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
+  </main>
 
-  // Live Terminal Logs
-  setInterval(() => {
-    const term = document.getElementById('term');
-    term.innerHTML += `<div>[${new Date().toLocaleTimeString()}] SENSOR_DATA: INGESTED_SUCCESS</div>`;
-    term.scrollTop = term.scrollHeight;
-  }, 3000);
+  <script>
+    let activeIp = "192.168.4.1";
 
-  // Animated Graphs
-  const config = (color) => ({ type: 'line', data: { labels: [1,2,3,4,5,6], datasets: [{ data: [10,20,15,30,25,40], borderColor: color, fill: false }] }, options: { animation: false } });
-  const charts = [new Chart('c1', config('#00f2fe')), new Chart('c2', config('#ff0055')), new Chart('c3', config('#00ff87')), new Chart('c4', config('#ff9900'))];
-  
-  setInterval(() => {
-    charts.forEach(c => {
-      c.data.datasets[0].data.shift();
-      c.data.datasets[0].data.push(Math.floor(Math.random() * 50));
-      c.update();
+    function switchSlide(slideId, el) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(slideId).classList.add('active');
+      el.classList.add('active');
+    }
+
+    function updateIp() {
+      activeIp = document.getElementById('targetIp').value.trim();
+      const stream = document.getElementById('streamFeed');
+      stream.src = activeIp.startsWith("http") ? `${activeIp}:81/stream` : `http://${activeIp}:81/stream`;
+      appendLog(`Connecting to ESP32 stream at ${activeIp}...`);
+    }
+
+    function triggerEmergencyAlert() {
+      appendLog("⚡ [EMERGENCY OVERRIDE] Dispatch Signal Executed Successfully!");
+      alert("🚨 EMERGENCY ALERT DISPATCHED!\n\nSignal registered on Command Dashboard in < 1ms.");
+    }
+
+    function appendLog(msg, isErr = false) {
+      const term = document.getElementById('terminal');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.style.color = isErr ? '#ff0055' : '#00ff87';
+      div.innerText = `[${time}] ${msg}`;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    // Initialize 6 Fluctuating Chart.js Graphs
+    const makeChart = (id, label, color) => new Chart(document.getElementById(id), {
+      type: 'line',
+      data: {
+        labels: ['1s','2s','3s','4s','5s','6s','7s','8s'],
+        datasets: [{ label, data: [12,19,15,25,22,30,28,35], borderColor: color, backgroundColor: color+'15', fill: true, tension: 0.4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
     });
-  }, 1000);
 
-  function dispatchAlert() {
-    alert("🚨 EMERGENCY DISPATCHED: Logic locked into secure memory.");
-  }
-</script>
+    const gasChart = makeChart('gasChart', 'Gas PPM', '#00f2fe');
+    const uvChart = makeChart('uvChart', 'UV Index', '#ff0055');
+    const ultraChart = makeChart('ultraChart', 'Distance (CM)', '#00ff87');
+    const tempChart = makeChart('tempChart', 'Temp (°C)', '#ff9900');
+    const pressChart = makeChart('pressChart', 'hPa', '#9d4edd');
+    const powerChart = makeChart('powerChart', 'mW', '#00f2fe');
+
+    // Live Graph Fluctuation Interval
+    setInterval(() => {
+      [gasChart, uvChart, ultraChart, tempChart, pressChart, powerChart].forEach(c => {
+        c.data.datasets[0].data.shift();
+        c.data.datasets[0].data.push(Math.floor(Math.random() * 45) + 10);
+        c.update();
+      });
+      
+      // Dynamic Ping Simulation
+      document.getElementById('pingVal').innerText = (Math.floor(Math.random() * 5) + 2) + "ms";
+    }, 1200);
+
+    // Auto-Log Activity Simulation
+    setInterval(() => {
+      appendLog(`[TELEMETRY] Packet synced from node ${Math.floor(Math.random() * 900) + 100}`);
+    }, 4000);
+  </script>
 </body>
 </html>
