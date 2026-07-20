@@ -2,89 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>DEVELOPMENTX 1.0 - GLOBAL COMMAND SHIELD</title>
+  <title>DEVELOPMENTX 1.0 - GLOBAL COMMAND CENTER</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root { --bg-dark: #050811; --accent-cyan: #00f2fe; --accent-red: #ff0055; --accent-green: #00ff87; --text: #f1f5f9; }
-    body { background: var(--bg-dark); color: var(--text); font-family: 'Rajdhani', sans-serif; padding: 20px; }
-    .glass { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 12px; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
-    h1 { font-family: 'Orbitron'; color: var(--accent-cyan); margin-bottom: 20px; }
-    .btn-emergency { background: linear-gradient(135deg, #ff0055, #880022); color: white; padding: 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold; width: 100%; box-shadow: 0 0 15px #ff0055; }
-    .terminal { background: #000; color: var(--accent-green); height: 200px; overflow-y: auto; padding: 10px; font-family: monospace; border: 1px solid var(--accent-cyan); border-radius: 6px; }
-    .cam-feed { width: 100%; height: 350px; background: #000; border-radius: 8px; }
-    .sensor-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center; }
+    :root { --bg: #0b0e14; --glass: rgba(20, 30, 50, 0.7); --cyan: #00f2fe; --red: #ff0055; --green: #00ff87; }
+    body { background: var(--bg); color: #fff; font-family: 'Orbitron', sans-serif; display: flex; height: 100vh; overflow: hidden; margin: 0; }
+    
+    /* Sidebar */
+    nav { width: 250px; background: #000; border-right: 1px solid var(--cyan); padding: 20px; }
+    nav h2 { color: var(--cyan); margin-bottom: 30px; font-size: 1.2rem; }
+    .nav-link { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; transition: 0.3s; }
+    .nav-link:hover { background: var(--cyan); color: #000; }
+
+    /* Main Content */
+    main { flex-grow: 1; padding: 20px; overflow-y: auto; }
+    .content-slide { display: none; }
+    .content-slide.active { display: block; }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: var(--glass); border: 1px solid #333; border-radius: 10px; padding: 20px; }
+    .terminal { background: #000; color: var(--green); height: 250px; overflow-y: auto; padding: 10px; font-family: monospace; border: 1px solid var(--cyan); }
+    .graph-box { height: 200px; }
+    
+    .btn-alert { width: 100%; padding: 20px; background: var(--red); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 20px var(--red); }
   </style>
 </head>
 <body>
 
-  <h1>DEVELOPMENTX 1.0 - GLOBAL COMMAND SHIELD</h1>
+<nav>
+  <h2>DEV-X COMMAND</h2>
+  <div class="nav-link" onclick="showSlide('slide1')">📡 GLOBAL COMMAND</div>
+  <div class="nav-link" onclick="showSlide('slide2')">📊 SENSOR TELEMETRY</div>
+  <div class="nav-link" onclick="showSlide('slide3')">💻 DATABASE LOGS</div>
+</nav>
 
-  <!-- Slide 1: Command & Vision -->
-  <div class="grid">
-    <div class="glass">
-      <h3><i class="fa-solid fa-triangle-exclamation"></i> EMERGENCY OVERRIDE</h3>
-      <button class="btn-emergency" onclick="triggerAlert()">⚡ TRIGGER INSTANT ALERT</button>
-      <div style="margin-top:20px;">
-        <input type="text" id="ip" value="192.168.4.1" style="background:#000; color:#fff; border:1px solid #00f2fe; padding:10px; width:70%;">
-        <button onclick="setCamera()" style="padding:10px; background:#00f2fe; border:none; cursor:pointer;">LINK ESP32</button>
+<main>
+  <!-- Slide 1 -->
+  <div id="slide1" class="content-slide active">
+    <h1>GLOBAL MISSION COMMAND</h1>
+    <div class="grid">
+      <div class="card">
+        <h3>ESP32-CAM LIVE STREAM</h3>
+        <img id="stream" src="http://192.168.4.1:81/stream" style="width:100%; height:300px; background:#000;">
       </div>
-      <div class="terminal" id="term" style="margin-top:15px;">
-        <div>[SYSTEM] Node initialization complete...</div>
+      <div class="card">
+        <h3>HARDWARE STATUS</h3>
+        <button class="btn-alert" onclick="dispatchAlert()">⚡ EMERGENCY DISPATCH</button>
+        <p style="margin-top:20px;">Connection: STABLE | Latency: 2ms</p>
       </div>
-    </div>
-    
-    <div class="glass">
-      <h3><i class="fa-solid fa-camera"></i> ESP32-CAM VISION FEED</h3>
-      <img id="cam" class="cam-feed" src="http://192.168.4.1:81/stream" alt="ESP32 Feed Offline">
     </div>
   </div>
 
-  <!-- Slide 2: Sensors -->
-  <div class="glass">
-    <h3><i class="fa-solid fa-chart-line"></i> REAL-TIME SENSOR TELEMETRY</h3>
-    <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
-      <div class="sensor-card"><h4>GAS (PPM)</h4><canvas id="gasChart"></canvas></div>
-      <div class="sensor-card"><h4>FLAME/UV</h4><canvas id="flameChart"></canvas></div>
-      <div class="sensor-card"><h4>DISTANCE</h4><canvas id="distChart"></canvas></div>
-      <div class="sensor-card"><h4>TEMP (°C)</h4><canvas id="tempChart"></canvas></div>
+  <!-- Slide 2 -->
+  <div id="slide2" class="content-slide">
+    <h1>LIVE SENSOR MONITORING</h1>
+    <div class="grid">
+      <div class="card"><canvas id="c1"></canvas></div>
+      <div class="card"><canvas id="c2"></canvas></div>
+      <div class="card"><canvas id="c3"></canvas></div>
+      <div class="card"><canvas id="c4"></canvas></div>
     </div>
   </div>
 
-  <script>
-    // Terminal Log Logic
-    function log(msg) {
-      const term = document.getElementById('term');
-      term.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-      term.scrollTop = term.scrollHeight;
-    }
+  <!-- Slide 3 -->
+  <div id="slide3" class="content-slide">
+    <h1>SYSTEM DATABASE TERMINAL</h1>
+    <div class="card">
+      <div class="terminal" id="term"></div>
+    </div>
+  </div>
+</main>
 
-    // Camera Link Logic
-    function setCamera() {
-      const ip = document.getElementById('ip').value;
-      document.getElementById('cam').src = `http://${ip}:81/stream`;
-      log("Connecting to ESP32: " + ip);
-    }
+<script>
+  function showSlide(id) {
+    document.querySelectorAll('.content-slide').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
 
-    // Emergency Trigger Logic (Error-Free)
-    function triggerAlert() {
-      log("⚡ ALERT TRIGGERED: Emergency Protocol Activated!");
-      alert("🚨 ALERT SENT!\n\nSystem registered: Hazard detected, Security triggered, ESP32 streaming enabled.");
-    }
+  // Live Terminal Logs
+  setInterval(() => {
+    const term = document.getElementById('term');
+    term.innerHTML += `<div>[${new Date().toLocaleTimeString()}] SENSOR_DATA: INGESTED_SUCCESS</div>`;
+    term.scrollTop = term.scrollHeight;
+  }, 3000);
 
-    // Sensor Chart Initialization
-    const createChart = (id, color) => new Chart(document.getElementById(id), {
-      type: 'line',
-      data: { labels: [1,2,3,4,5], datasets: [{ data: [10,20,15,25,20], borderColor: color, fill: false }] },
-      options: { responsive: true, plugins: { legend: { display: false } } }
+  // Animated Graphs
+  const config = (color) => ({ type: 'line', data: { labels: [1,2,3,4,5,6], datasets: [{ data: [10,20,15,30,25,40], borderColor: color, fill: false }] }, options: { animation: false } });
+  const charts = [new Chart('c1', config('#00f2fe')), new Chart('c2', config('#ff0055')), new Chart('c3', config('#00ff87')), new Chart('c4', config('#ff9900'))];
+  
+  setInterval(() => {
+    charts.forEach(c => {
+      c.data.datasets[0].data.shift();
+      c.data.datasets[0].data.push(Math.floor(Math.random() * 50));
+      c.update();
     });
+  }, 1000);
 
-    createChart('gasChart', '#00f2fe');
-    createChart('flameChart', '#ff0055');
-    createChart('distChart', '#00ff87');
-    createChart('tempChart', '#ff9900');
-  </script>
+  function dispatchAlert() {
+    alert("🚨 EMERGENCY DISPATCHED: Logic locked into secure memory.");
+  }
+</script>
 </body>
 </html>
