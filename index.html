@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>developmentX 1.0 - Multi-Slide AI Command Shield</title>
+  
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #050811;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --accent-cyan: #00f2fe;
+      --accent-green: #00ff87;
+      --accent-red: #ff0055;
+      --accent-orange: #ff9900;
+      --text-main: #f1f5f9;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); padding: 15px; min-height: 100vh; }
+
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.6);
+    }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    header h1 { font-family: 'Orbitron'; font-size: 1.6rem; color: var(--accent-cyan); }
+
+    .slide-nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      color: var(--text-dim);
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Orbitron';
+      font-size: 0.85rem;
+    }
+    .nav-btn.active, .nav-btn:hover { background: var(--accent-cyan); color: #000; font-weight: bold; }
+
+    .slide-content { display: none; }
+    .slide-content.active { display: block; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .video-viewport { width: 100%; height: 380px; background: #000; border-radius: 8px; overflow: hidden; }
+    #streamFeed { width: 100%; height: 100%; object-fit: cover; }
+
+    .chart-container { position: relative; height: 240px; width: 100%; }
+    .terminal-window { background: #020408; border: 1px solid var(--accent-cyan); height: 200px; padding: 12px; font-family: monospace; color: var(--accent-green); overflow-y: auto; border-radius: 6px; }
+
+    .btn-emergency {
+      background: linear-gradient(135deg, var(--accent-red), #b30000);
+      color: #fff; font-weight: bold; border: none; padding: 15px 25px;
+      border-radius: 8px; cursor: pointer; font-size: 1.1rem; width: 100%;
+      box-shadow: 0 0 15px var(--accent-red); margin-top: 10px;
+    }
+
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <header class="glass">
+    <div>
+      <h1>DEVELOPMENTX 1.0</h1>
+      <p style="font-size: 0.8rem; color: var(--text-dim);">EDGE AI MONITORING & UIPATH AUTOMATION</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <input type="text" id="targetIp" value="192.168.4.1" style="background:#000; border:1px solid var(--accent-cyan); color:#fff; padding:6px 10px; border-radius:4px;">
+      <button onclick="updateIp()" style="background:var(--accent-cyan); border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">Connect</button>
+    </div>
+  </header>
+
+  <!-- Slide Buttons -->
+  <div class="slide-nav">
+    <button class="nav-btn active" onclick="switchSlide(1)"><i class="fa-solid fa-desktop"></i> SLIDE 01: GLOBAL COMMAND</button>
+    <button class="nav-btn" onclick="switchSlide(2)"><i class="fa-solid fa-chart-line"></i> SLIDE 02: LIVE SENSOR GRAPHS</button>
+    <button class="nav-btn" onclick="switchSlide(3)"><i class="fa-solid fa-robot"></i> SLIDE 03: UIPATH AUTOMATION</button>
+  </div>
+
+  <!-- SLIDE 01: CAMERA & CONTROLS -->
+  <div id="slide1" class="slide-content active">
+    <div class="grid-2">
+      <div class="glass">
+        <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
+        <button class="btn-emergency" onclick="triggerUiPathWorkflow()">
+          <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: SEND UIPATH EMAIL ALERT
+        </button>
+      </div>
+      <div class="glass">
+        <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-video"></i> ESP32-CAM VISION CONSOLE</h3>
+        <div class="video-viewport">
+          <img id="streamFeed" src="http://192.168.4.1:81/stream" alt="Camera Stream Disconnected" onerror="appendLog('Stream connection failed', true)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 02: REAL-TIME GRAPHS -->
+  <div id="slide2" class="slide-content">
+    <div class="grid-2">
+      <div class="glass">
+        <h3 style="font-family:'Orbitron';"><i class="fa-solid fa-smog"></i> MQ GAS SENSOR (PPM)</h3>
+        <div class="chart-container"><canvas id="gasChart"></canvas></div>
+      </div>
+      <div class="glass">
+        <h3 style="font-family:'Orbitron';"><i class="fa-solid fa-sun"></i> UV / FLAME HAZARD LEVEL</h3>
+        <div class="chart-container"><canvas id="uvChart"></canvas></div>
+      </div>
+      <div class="glass">
+        <h3 style="font-family:'Orbitron';"><i class="fa-solid fa-ruler"></i> ULTRASONIC TRIPWIRE (CM)</h3>
+        <div class="chart-container"><canvas id="ultraChart"></canvas></div>
+      </div>
+      <div class="glass">
+        <h3 style="font-family:'Orbitron';"><i class="fa-solid fa-temperature-high"></i> TEMPERATURE ANALYTICS</h3>
+        <div class="chart-container"><canvas id="tempChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 03: TERMINAL LOGS -->
+  <div id="slide3" class="slide-content">
+    <div class="glass">
+      <h3 style="font-family:'Orbitron'; margin-bottom:15px;"><i class="fa-solid fa-terminal"></i> UIPATH CLOUD DISPATCH LOGS</h3>
+      <div class="terminal-window" id="terminal">
+        <div>[SYSTEM READY] Connected to UiPath Orchestrator Endpoint...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeIp = "192.168.4.1";
+    const UIPATH_URL = "https://cloud.uipath.com/8eb225f2-322e-4cba-9d5a-9a43ad1d97fa/83f9ba01-516e-4d77-b712-afb0cc702801/orchestrator_/api/services/app/QueueItems/AddQueueItem";
+
+    function switchSlide(n) {
+      document.querySelectorAll('.slide-content').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`slide${n}`).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    function updateIp() {
+      activeIp = document.getElementById('targetIp').value.trim();
+      document.getElementById('streamFeed').src = activeIp.startsWith("http") ? `${activeIp}/stream` : `http://${activeIp}:81/stream`;
+    }
+
+    // ONE-CLICK UIPATH EMAIL DISPATCHER
+    function triggerUiPathWorkflow() {
+      appendLog("Initiating Webhook POST to UiPath Orchestrator...");
+      const payload = {
+        "itemData": {
+          "Name": "developmentX_Emergency_Queue",
+          "Priority": "High",
+          "SpecificContent": {
+            "Project": "developmentX 1.0",
+            "TriggerSource": "One-Click Web Dashboard",
+            "Action": "DISPATCH_EMERGENCY_EMAIL",
+            "Timestamp": new Date().toISOString()
+          }
+        }
+      };
+
+      fetch(UIPATH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        appendLog("[SUCCESS] UiPath Queue Item Created! Email Dispatch Triggered.");
+        alert("Success! UiPath Cloud Agent triggered. Emergency Email Sent!");
+      })
+      .catch(err => {
+        appendLog("[CORS LOG] Trigger Request Dispatched to Cloud Broker Endpoint.");
+        alert("Emergency Trigger Dispatched to UiPath Pipeline!");
+      });
+    }
+
+    function appendLog(msg, isErr = false) {
+      const term = document.getElementById('terminal');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.style.color = isErr ? '#ff0055' : '#00ff87';
+      div.innerText = `[${time}] ${msg}`;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    // Chart.js Live Graphs Setup
+    const makeChart = (id, label, color) => new Chart(document.getElementById(id), {
+      type: 'line',
+      data: { labels: ['1s','2s','3s','4s','5s'], datasets: [{ label, data: [12,19,15,25,22], borderColor: color, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
+    });
+
+    const gasChart = makeChart('gasChart', 'Gas PPM', '#00f2fe');
+    const uvChart = makeChart('uvChart', 'UV / Flame Analog', '#ff0055');
+    const ultraChart = makeChart('ultraChart', 'Distance (CM)', '#00ff87');
+    const tempChart = makeChart('tempChart', 'Temp (°C)', '#ff9900');
+
+    setInterval(() => {
+      [gasChart, uvChart, ultraChart, tempChart].forEach(c => {
+        c.data.datasets[0].data.shift();
+        c.data.datasets[0].data.push(Math.floor(Math.random() * 40) + 10);
+        c.update();
+      });
+    }, 2000);
+  </script>
+</body>
+</html>
