@@ -82,7 +82,7 @@
     </div>
   </header>
 
-  <!-- Slide Buttons -->
+  <!-- Navigation Slides -->
   <div class="slide-nav">
     <button class="nav-btn active" onclick="switchSlide(1)"><i class="fa-solid fa-desktop"></i> SLIDE 01: GLOBAL COMMAND</button>
     <button class="nav-btn" onclick="switchSlide(2)"><i class="fa-solid fa-chart-line"></i> SLIDE 02: LIVE SENSOR GRAPHS</button>
@@ -155,7 +155,6 @@
       document.getElementById('streamFeed').src = activeIp.startsWith("http") ? `${activeIp}/stream` : `http://${activeIp}:81/stream`;
     }
 
-    // ONE-CLICK UIPATH EMAIL DISPATCHER
     function triggerUiPathWorkflow() {
       appendLog("Initiating Webhook POST to UiPath Orchestrator...");
       const payload = {
@@ -196,7 +195,6 @@
       term.scrollTop = term.scrollHeight;
     }
 
-    // Chart.js Live Graphs Setup
     const makeChart = (id, label, color) => new Chart(document.getElementById(id), {
       type: 'line',
       data: { labels: ['1s','2s','3s','4s','5s'], datasets: [{ label, data: [12,19,15,25,22], borderColor: color, tension: 0.4 }] },
