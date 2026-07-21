@@ -242,5 +242,21 @@ Enter local IP (e.g., 192.168.4.1) -> Click CONNECT
 > ### 🎯 CONCLUSION
 > **DEVELOPMENTX 1.0** bridges the gap between low-cost IoT prototyping and enterprise-grade security. By combining **ESP32-CAM, multi-sensor telemetry, and browser-based Edge AI**, it delivers a zero-lag, resilient, and highly scalable solution for wildlife defense, environmental protection, and industrial safety.
 
+---
+
+## 🎬 LIVE SYSTEM DEMONSTRATION & VIDEO PRESENTATION
+
+<p align="center">
+  <a href="https://youtu.be/weRUsueU0Pg" target="_blank">
+    <img src="https://img.youtube.com/vi/weRUsueU0Pg/maxresdefault.jpg" alt="DEVELOPMENTX 1.0 Video Presentation" width="85%" style="border-radius: 10px; border: 2px solid #00f2fe;">
+  </a>
+</p>
+
+> [!NOTE]
+> 📺 **Click the image above to watch the complete live demonstration and presentation of DEVELOPMENTX 1.0 on YouTube.**  
+> 🔗 **Direct Link:** [Watch Project Video on YouTube](https://youtu.be/weRUsueU0Pg)
+
+---
+
 
 
