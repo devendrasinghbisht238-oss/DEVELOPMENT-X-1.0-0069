@@ -191,8 +191,6 @@ Enter local IP (e.g., 192.168.4.1) -> Click CONNECT
 
 ---
 
-## 💡 Key Innovations & Core Breakthroughs
-
 1. **Client-Side Edge AI Inference (Zero ESP32 Lag)**:
    * Offloads complex vision models (COCO-SSD) to the browser engine, preventing memory crashes on the ESP32-CAM while achieving real-time frame classification.
 2. **Dual-Spectrum Hazard Detection**:
@@ -201,8 +199,6 @@ Enter local IP (e.g., 192.168.4.1) -> Click CONNECT
    * One-click emergency trigger protocol operates with $< 1\text{ ms}$ execution latency without external network API bottlenecks.
 
 ---
-
-## 🌐 Real-World Application Sectors
 
 * **🌲 Wildlife Conservation & Forestry**:
   * Prevents human-wildlife conflict by detecting animals (e.g., elephants, bears) near border fences and firing early deterrence signals.
@@ -214,8 +210,7 @@ Enter local IP (e.g., 192.168.4.1) -> Click CONNECT
   * Integrated multi-slide command dashboard for centralized environmental monitoring and traffic/personnel tracking.
 
 ---
-
-## 🔮 Future Scope & Advanced Enhancements
+## 
 
 1. **☁️ Cloud IoT & MQTT Broker Synchronization**:
    * Integrating MQTT protocol to transmit real-time telemetry alerts directly to cloud databases (AWS IoT / Firebase) for remote mobile app notifications.
