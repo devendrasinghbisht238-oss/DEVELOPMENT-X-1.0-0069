@@ -10,6 +10,9 @@
 ---
 
 ## 📌 Executive Overview
+> **Development & Architecture Declaration:** Baseline IoT pinouts and core firmware logic build upon our foundational edge prototype, with real-time browser-based AI vision, dual-spectrum anomaly thresholds, and automated incident triage pipelines refined for this deployment.
+
+
 **DEVELOPMENTX 1.0** is an **International-Grade, Multi-Slide IoT & Edge-AI Emergency Command Dashboard**. The system monitors multi-sensor telemetry in real-time, executes zero-latency local emergency dispatches, and processes live video streams using **Client-Side Edge AI (TensorFlow.js COCO-SSD)** to perform real-time **Human vs. Wildlife Classification**.
 
 ---
@@ -254,8 +257,7 @@ Enter local IP (e.g., 192.168.4.1) -> Click CONNECT
 
 > [!NOTE]
 > 📺 **Click the image above to watch the complete live demonstration and presentation of DEVELOPMENTX 1.0 on YouTube.**  
-> 🔗 **Direct Link:** [Watch Project Video on YouTube](https://youtu.be/weRUsueU0Pg)
-
+> 🔗 **Direct Link:** [Watch Project Video on YouTube] (https://youtu.be/aS2C_WJTfjc?si=2ZsxWEmDfhwiuelr) 
 ---
 
 
