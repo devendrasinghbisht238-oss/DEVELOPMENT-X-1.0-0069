@@ -125,20 +125,25 @@
       display: flex; align-items: center; justify-content: center;
       position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.1);
     }
+    
+    /* VERY IMPORTANT: Object-fit Fill ensures coordinates match perfectly for tracking */
     .cam-container img {
-      width: 100%; height: 100%; object-fit: cover;
+      width: 100%; height: 100%; object-fit: fill; 
     }
+    
     .cam-alert {
       margin-top: 20px; display: block; width: 100%; text-align: center; padding: 12px;
       font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px;
       border-radius: 4px; font-size: 14px;
     }
 
+    /* === UPDATED: DYNAMIC AI TRACKER (MOVES WITH FIRE) === */
     .ai-tracker {
-      position: absolute; top: 50%; left: 50%; width: 120px; height: 120px;
-      margin-top: -60px; margin-left: -60px; border: 2px solid var(--red); display: none; 
+      position: absolute; 
+      border: 2px solid var(--red); display: none; 
       box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.5);
       animation: target-lock 0.3s infinite alternate; z-index: 10;
+      transition: all 0.15s ease-out; /* Smooth Movement */
     }
     .ai-tracker.active { display: block; } 
     
@@ -233,8 +238,10 @@
           <div class="glass-panel" style="border-top-color: var(--cyan);">
             <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
             <div class="cam-container">
-              <!-- crossOrigin="Anonymous" is required to scan pixels without security errors -->
+              <!-- crossOrigin="Anonymous" bypassed basic CORS -->
               <img id="camStream" crossOrigin="Anonymous" src="" alt="[ CAMERA FEED OFFLINE ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
+              
+              <!-- DYNAMIC TRACKER OVERLAY -->
               <div id="aiTracker" class="ai-tracker">
                 <div class="tracker-label">[ TARGET LOCKED: FIRE ]</div>
               </div>
@@ -393,7 +400,6 @@
         document.getElementById('connState').style.color = "#10b981";
         addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Computer Vision Engine Started.</span>`);
         
-        // Start the background AI Vision Engine
         clearInterval(opticalScannerInterval);
         opticalScannerInterval = setInterval(processOpticalVision, 500); 
       };
@@ -407,37 +413,45 @@
       };
     }
 
-    // === THE INVISIBLE COMPUTER VISION ENGINE ===
-    // Yeh engine har 0.5 second mein video image ko read karke fire detect karta hai
+    // === THE DYNAMIC TARGET LOCK ENGINE ===
     function processOpticalVision() {
       const camImg = document.getElementById('camStream');
       if (!camImg.complete || camImg.naturalWidth === 0) return;
 
       const canvas = document.createElement('canvas');
-      canvas.width = camImg.width || 320;
-      canvas.height = camImg.height || 240;
+      canvas.width = camImg.naturalWidth;
+      canvas.height = camImg.naturalHeight;
       const ctx = canvas.getContext('2d');
       
       try {
           ctx.drawImage(camImg, 0, 0, canvas.width, canvas.height);
           const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = frame.data;
-          let firePixelCount = 0;
           
-          // Scanning Pixels for bright Orange/Red/Yellow (Fire Signature)
-          for (let i = 0; i < data.length; i += 4) {
-              let r = data[i], g = data[i+1], b = data[i+2];
-              if (r > 200 && g > 100 && g < 220 && b < 100) {
-                  firePixelCount++;
+          let firePixelCount = 0;
+          let sumX = 0, sumY = 0;
+          let minX = canvas.width, maxX = 0;
+          let minY = canvas.height, maxY = 0;
+          
+          // Fast Scan logic for Red/Orange/Yellow Fire Pixels
+          for (let y = 0; y < canvas.height; y += 2) {
+              for (let x = 0; x < canvas.width; x += 2) {
+                  let i = (y * canvas.width + x) * 4;
+                  let r = data[i], g = data[i+1], b = data[i+2];
+                  
+                  if (r > 200 && g > 100 && b < 150) {
+                      firePixelCount++;
+                      sumX += x; sumY += y;
+                      if (x < minX) minX = x;
+                      if (x > maxX) maxX = x;
+                      if (y < minY) minY = y;
+                      if (y > maxY) maxY = y;
+                  }
               }
           }
           
-          let totalPixels = canvas.width * canvas.height;
-          // Calculate percentage and multiply for sensitivity
-          let fireIntensity = (firePixelCount / totalPixels) * 1000; 
-          let visualFlameVal = Math.min(Math.round(fireIntensity), 100);
+          let visualFlameVal = Math.min(Math.round((firePixelCount / (canvas.width * canvas.height / 4)) * 2000), 100);
           
-          // Simulated values for missing hardware (keeps graphs moving)
           let simulatedGas = Math.floor(Math.random() * 20) + 400; 
           let simCpu = Math.floor(Math.random() * 15) + 40;
           let simPwr = Math.floor(Math.random() * 40) + 3810;
@@ -451,21 +465,47 @@
           const camAlert = document.getElementById('camAlert');
           const tracker = document.getElementById('aiTracker');
 
-          // Trigger Logic
-          if (visualFlameVal > 15) {
-              tracker.classList.add('active'); // Target Locked!
+          // HIGH SENSITIVITY: Sirf 5 Pixel aag dikhte hi trigger karega
+          if (firePixelCount > 5) { 
+              let avgX = sumX / firePixelCount;
+              let avgY = sumY / firePixelCount;
+              
+              // Scale coordinates to fit UI screen size perfectly
+              let scaleX = camImg.clientWidth / canvas.width;
+              let scaleY = camImg.clientHeight / canvas.height;
+              
+              let targetX = avgX * scaleX;
+              let targetY = avgY * scaleY;
+              
+              let boxW = Math.max((maxX - minX) * scaleX + 40, 60);
+              let boxH = Math.max((maxY - minY) * scaleY + 40, 60);
+
+              tracker.style.left = targetX + 'px';
+              tracker.style.top = targetY + 'px';
+              tracker.style.width = boxW + 'px';
+              tracker.style.height = boxH + 'px';
+              tracker.style.marginLeft = -(boxW/2) + 'px';
+              tracker.style.marginTop = -(boxH/2) + 'px';
+              
+              tracker.classList.add('active'); 
               camAlert.innerHTML = "[ HAZARD ] OPTICAL FIRE DETECTED!";
               camAlert.style.background = "rgba(255, 0, 85, 0.15)";
               camAlert.style.color = "#ff0055";
-              analyzeHazardWithAI(visualFlameVal);
+              
+              if (visualFlameVal > 5) analyzeHazardWithAI(visualFlameVal);
           } else {
-              tracker.classList.remove('active'); // Target Lost
+              tracker.classList.remove('active'); 
               camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
               camAlert.style.background = "rgba(16, 185, 129, 0.15)";
               camAlert.style.color = "#10b981";
           }
       } catch (e) {
-          console.log("Waiting for Secure Video Stream...", e);
+          if (!window.corsWarningShown) {
+              console.error("Browser Security blocked AI Scan:", e);
+              const aiBox = document.getElementById('aiRecommendationBox');
+              aiBox.innerHTML = "<span style='color: #ff0055;'>[ SYSTEM WARNING ] Google Chrome Security (CORS) is blocking the AI from scanning the camera. <br><br><b>PITCH FIX:</b> Please DO NOT run this from GitHub Pages link. Download this index.html file and open it directly from your Laptop folder (Localhost) to allow the AI Scanner to work!</span>";
+              window.corsWarningShown = true;
+          }
       }
     }
   </script>
