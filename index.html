@@ -1,446 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DEVELOPMENTX 1.0 - MULTI-SLIDE AI COMMAND SHIELD</title>
-  
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>developmentX 1.0 | Command Center</title>
+    <style>
+        :root {
+            --bg-main: #0b1120;
+            --bg-card: #1e293b;
+            --cyan: #00d2ff;
+            --red: #ef4444;
+            --green: #10b981;
+            --text-muted: #94a3b8;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .navbar {
+            width: 100%; background: #0f172a; padding: 20px 0;
+            text-align: center; border-bottom: 2px solid var(--cyan);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+            margin-bottom: 40px;
+        }
+        .navbar h1 {
+            margin: 0; font-size: 24px; letter-spacing: 3px; font-weight: 900;
+        }
+        .navbar span { color: var(--cyan); }
+        
+        .control-panel {
+            margin-bottom: 30px; display: flex; gap: 15px;
+        }
+        input {
+            background: var(--bg-card); color: var(--cyan);
+            border: 1px solid var(--cyan); padding: 12px 20px;
+            border-radius: 4px; font-weight: bold; width: 250px;
+            text-align: center; font-size: 14px; outline: none;
+        }
+        
+        .dashboard-grid {
+            display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; width: 90%; max-width: 1000px;
+        }
+        .sensor-card {
+            background: var(--bg-card); border: 1px solid #334155;
+            border-radius: 12px; padding: 30px; width: 100%; max-width: 400px;
+            text-align: center; position: relative; overflow: hidden;
+            transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .sensor-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+        }
+        .card-gas::before { background: var(--cyan); }
+        .card-fire::before { background: var(--red); }
+        
+        .card-title {
+            font-size: 16px; color: var(--text-muted); font-weight: 700; letter-spacing: 1.5px;
+            margin-bottom: 20px; text-transform: uppercase;
+        }
+        .data-display {
+            font-size: 65px; font-weight: 900; font-family: 'Courier New', Courier, monospace;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1); margin: 20px 0;
+        }
+        .data-gas { color: var(--cyan); }
+        .data-fire { color: var(--red); }
+        
+        .status-bar {
+            width: 100%; height: 8px; background: #334155; border-radius: 4px; margin-top: 20px; overflow: hidden;
+        }
+        .status-fill { height: 100%; transition: width 0.5s ease; }
+        .fill-gas { background: var(--cyan); }
+        .fill-fire { background: var(--red); }
 
-  <!-- TensorFlow.js & COCO-SSD Object Detection Model -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+        .global-alert {
+            margin-top: 50px; padding: 20px 40px; font-size: 22px; font-weight: bold;
+            border-radius: 8px; letter-spacing: 2px; width: 80%; max-width: 800px; text-align: center;
+        }
+        .alert-safe { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--green); color: var(--green); }
+        .alert-danger { 
+            background: rgba(239, 68, 68, 0.15); border: 2px solid var(--red); color: var(--red);
+            animation: pulse-danger 1s infinite;
+        }
 
-  <style>
-    :root {
-      --bg-dark: #050811;
-      --panel-bg: #0d121d;
-      --card-bg: rgba(15, 23, 42, 0.9);
-      --accent-cyan: #00f2fe;
-      --accent-green: #00ff87;
-      --accent-red: #ff0055;
-      --accent-orange: #ff9900;
-      --accent-purple: #9d4edd;
-      --text-main: #f1f5f9;
-      --text-dim: #94a3b8;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; }
-    body { background: var(--bg-dark); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-
-    /* SIDEBAR NAVIGATION */
-    aside {
-      width: 280px;
-      background: var(--panel-bg);
-      border-right: 1px solid rgba(0, 242, 254, 0.2);
-      display: flex;
-      flex-direction: column;
-      padding: 20px 15px;
-      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
-      z-index: 100;
-    }
-
-    .brand {
-      font-family: 'Orbitron';
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: var(--accent-cyan);
-      margin-bottom: 35px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
-    }
-
-    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .nav-item {
-      padding: 14px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: 'Orbitron';
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .nav-item:hover, .nav-item.active {
-      background: rgba(0, 242, 254, 0.1);
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
-      box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
-    }
-
-    .sys-status {
-      margin-top: auto;
-      background: rgba(0,0,0,0.4);
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.05);
-      font-size: 0.8rem;
-    }
-
-    /* MAIN VIEWPORT */
-    main { flex-grow: 1; padding: 25px; overflow-y: auto; background: var(--bg-dark); }
-
-    .slide { display: none; }
-    .slide.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    header h2 { font-family: 'Orbitron'; font-size: 1.5rem; color: var(--accent-cyan); letter-spacing: 1px; }
-
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-
-    .glass {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 242, 254, 0.2);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.6);
-    }
-
-    /* VIDEO VIEWPORT & AI OVERLAY */
-    .video-viewport {
-      width: 100%;
-      height: 380px;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-      border: 1px solid rgba(0, 242, 254, 0.3);
-    }
-    #streamFeed { width: 100%; height: 100%; object-fit: cover; }
-    #aiCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-
-    .chart-container { position: relative; height: 220px; width: 100%; }
-    
-    .terminal-window {
-      background: #020408;
-      border: 1px solid var(--accent-cyan);
-      height: 280px;
-      padding: 15px;
-      font-family: monospace;
-      color: var(--accent-green);
-      overflow-y: auto;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-
-    .btn-emergency {
-      background: linear-gradient(135deg, var(--accent-red), #800020);
-      color: #fff; font-weight: bold; border: none; padding: 18px 25px;
-      border-radius: 8px; cursor: pointer; font-size: 1.1rem; width: 100%;
-      box-shadow: 0 0 20px var(--accent-red); margin-top: 15px;
-      font-family: 'Orbitron'; letter-spacing: 1px;
-      transition: all 0.2s ease;
-    }
-    .btn-emergency:hover { transform: scale(1.02); filter: brightness(1.2); }
-    .btn-emergency:active { transform: scale(0.98); }
-
-    .input-group { display: flex; gap: 10px; margin-top: 15px; }
-    .input-group input {
-      background: #000; border: 1px solid var(--accent-cyan);
-      color: #fff; padding: 10px 15px; border-radius: 6px; flex-grow: 1;
-    }
-    .input-group button {
-      background: var(--accent-cyan); color: #000; border: none;
-      padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;
-    }
-
-    .ai-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-family: 'Orbitron';
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-left: 10px;
-      background: rgba(0, 242, 254, 0.1);
-      border: 1px solid var(--accent-cyan);
-      color: var(--accent-cyan);
-    }
-
-    @media (max-width: 1024px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } body { flex-direction: column; overflow: auto; } aside { width: 100%; } }
-  </style>
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- SIDEBAR NAVIGATION -->
-  <aside>
-    <div class="brand">
-      <i class="fa-solid fa-shield-halved"></i> DEV-X 1.0
-    </div>
-    <ul class="nav-list">
-      <li class="nav-item active" onclick="switchSlide('slide1', this)">
-        <i class="fa-solid fa-desktop"></i> GLOBAL COMMAND
-      </li>
-      <li class="nav-item" onclick="switchSlide('slide2', this)">
-        <i class="fa-solid fa-chart-line"></i> SENSOR ANALYTICS
-      </li>
-      <li class="nav-item" onclick="switchSlide('slide3', this)">
-        <i class="fa-solid fa-microchip"></i> HARDWARE TELEMETRY
-      </li>
-      <li class="nav-item" onclick="switchSlide('slide4', this)">
-        <i class="fa-solid fa-terminal"></i> KERNEL DATABASE
-      </li>
-    </ul>
-
-    <div class="sys-status">
-      <div style="color:var(--accent-green); font-weight:bold; margin-bottom:5px;">● SYSTEM ONLINE</div>
-      <div style="color:var(--text-dim);">Latency: <span id="pingVal">4ms</span></div>
-      <div style="color:var(--text-dim);">AI Engine: <span style="color:var(--accent-green);">COCO-SSD</span></div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT AREA -->
-  <main>
-    
-    <!-- SLIDE 01: GLOBAL COMMAND -->
-    <div id="slide1" class="slide active">
-      <header>
-        <h2>SLIDE 01: GLOBAL COMMAND SHIELD</h2>
-        <span style="color:var(--accent-green); font-weight:bold;">[NODE 01 ACTIVE]</span>
-      </header>
-      <div class="grid-2">
-        <div class="glass">
-          <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);"><i class="fa-solid fa-sliders"></i> HARDWARE OVERRIDE</h3>
-          <p style="color:var(--text-dim); font-size:0.9rem;">Trigger immediate high-priority emergency alert signal to the dashboard and global telemetry listeners.</p>
-          <button class="btn-emergency" onclick="triggerEmergencyAlert()">
-            <i class="fa-solid fa-paper-plane"></i> ONE-CLICK: TRIGGER INSTANT ALERT
-          </button>
-
-          <div style="margin-top:25px;">
-            <label style="font-family:'Orbitron'; font-size:0.85rem; color:var(--text-dim);">ESP32 NETWORK BRIDGE</label>
-            <div class="input-group">
-              <input type="text" id="targetIp" value="192.168.4.1">
-              <button onclick="updateIp()"><i class="fa-solid fa-link"></i> CONNECT</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass">
-          <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);">
-            <i class="fa-solid fa-brain"></i> ESP32-CAM AI VISION
-            <span class="ai-badge" id="aiStatus">LOADING AI...</span>
-          </h3>
-          <div class="video-viewport">
-            <img id="streamFeed" src="http://192.168.4.1:81/stream" crossorigin="anonymous" alt="ESP32 Feed Offline" onerror="appendLog('ESP32 Video Feed Offline', true)">
-            <canvas id="aiCanvas"></canvas>
-          </div>
-        </div>
-      </div>
+    <div class="navbar">
+        <h1>development<span>X</span> 1.0</h1>
     </div>
 
-    <!-- SLIDE 02: LIVE SENSOR ANALYTICS -->
-    <div id="slide2" class="slide">
-      <header>
-        <h2>SLIDE 02: LIVE SENSOR TELEMETRY</h2>
-        <span style="color:var(--accent-cyan); font-weight:bold;">[REAL-TIME FLUCTUATION ACTIVE]</span>
-      </header>
-      <div class="grid-3">
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-cyan); margin-bottom:10px;"><i class="fa-solid fa-smog"></i> MQ GAS PPM</h4>
-          <div class="chart-container"><canvas id="gasChart"></canvas></div>
-        </div>
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-red); margin-bottom:10px;"><i class="fa-solid fa-fire"></i> FLAME / UV HAZARD</h4>
-          <div class="chart-container"><canvas id="uvChart"></canvas></div>
-        </div>
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-green); margin-bottom:10px;"><i class="fa-solid fa-ruler"></i> ULTRASONIC TRIPWIRE</h4>
-          <div class="chart-container"><canvas id="ultraChart"></canvas></div>
-        </div>
-      </div>
+    <div class="control-panel">
+        <input type="text" id="ipInput" placeholder="ENTER ESP32 IP" value="192.168.4.1">
     </div>
 
-    <!-- SLIDE 03: HARDWARE TELEMETRY -->
-    <div id="slide3" class="slide">
-      <header>
-        <h2>SLIDE 03: AUXILIARY HARDWARE METRICS</h2>
-      </header>
-      <div class="grid-3">
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-orange); margin-bottom:10px;"><i class="fa-solid fa-temperature-high"></i> CORE TEMP (°C)</h4>
-          <div class="chart-container"><canvas id="tempChart"></canvas></div>
+    <div class="dashboard-grid">
+        <!-- GAS SENSOR UI -->
+        <div class="sensor-card card-gas" id="gasCard">
+            <div class="card-title">💨 Toxic Gas / Smoke (MQ)</div>
+            <div class="data-display data-gas" id="gasValue">--</div>
+            <div style="color: var(--text-muted); font-size: 14px; font-weight: bold;">PPM (PARTS PER MILLION)</div>
+            <div class="status-bar"><div class="status-fill fill-gas" id="gasBar" style="width: 0%;"></div></div>
         </div>
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-purple); margin-bottom:10px;"><i class="fa-solid fa-gauge-high"></i> BAROMETRIC PRESSURE</h4>
-          <div class="chart-container"><canvas id="pressChart"></canvas></div>
+
+        <!-- FIRE SENSOR UI -->
+        <div class="sensor-card card-fire" id="fireCard">
+            <div class="card-title">🔥 Infrared Flame Hazard</div>
+            <div class="data-display data-fire" id="fireValue">--</div>
+            <div style="color: var(--text-muted); font-size: 14px; font-weight: bold;">HAZARD PERCENTAGE (%)</div>
+            <div class="status-bar"><div class="status-fill fill-fire" id="fireBar" style="width: 0%;"></div></div>
         </div>
-        <div class="glass">
-          <h4 style="font-family:'Orbitron'; color:var(--accent-cyan); margin-bottom:10px;"><i class="fa-solid fa-bolt"></i> POWER LOAD (mW)</h4>
-          <div class="chart-container"><canvas id="powerChart"></canvas></div>
-        </div>
-      </div>
     </div>
 
-    <!-- SLIDE 04: KERNEL DATABASE LOGS -->
-    <div id="slide4" class="slide">
-      <header>
-        <h2>SLIDE 04: REAL-TIME AUTOMATION LOGS</h2>
-      </header>
-      <div class="glass">
-        <h3 style="font-family:'Orbitron'; margin-bottom:15px; color:var(--accent-cyan);"><i class="fa-solid fa-terminal"></i> SYSTEM EVENT STREAM</h3>
-        <div class="terminal-window" id="terminal">
-          <div>[00:00:00] [KERNEL] Initialization sequence loaded successfully.</div>
-          <div>[00:00:01] [NETWORK] Listening on websocket channel...</div>
-        </div>
-      </div>
+    <div class="global-alert alert-safe" id="systemStatus">
+        [ SYSTEM ONLINE ] ALL PARAMETERS NOMINAL
     </div>
 
-  </main>
+    <script>
+        function updateDashboard() {
+            const ip = document.getElementById('ipInput').value;
+            if(!ip) return;
 
-  <script>
-    let activeIp = "192.168.4.1";
-    let aiModel = null;
+            fetch(`http://${ip}/telemetry`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update Gas
+                    document.getElementById('gasValue').innerText = data.gas;
+                    let gasPercentage = Math.min((data.gas / 2000) * 100, 100); 
+                    document.getElementById('gasBar').style.width = gasPercentage + "%";
 
-    function switchSlide(slideId, el) {
-      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById(slideId).classList.add('active');
-      el.classList.add('active');
-    }
+                    // Update Fire
+                    document.getElementById('fireValue').innerText = data.flame;
+                    document.getElementById('fireBar').style.width = data.flame + "%";
 
-    function updateIp() {
-      activeIp = document.getElementById('targetIp').value.trim();
-      const stream = document.getElementById('streamFeed');
-      stream.src = activeIp.startsWith("http") ? `${activeIp}:81/stream` : `http://${activeIp}:81/stream`;
-      appendLog(`Connecting to ESP32 stream at ${activeIp}...`);
-    }
+                    // Update Global Status & Animations
+                    const statusBox = document.getElementById('systemStatus');
+                    const gasCard = document.getElementById('gasCard');
+                    const fireCard = document.getElementById('fireCard');
 
-    function triggerEmergencyAlert() {
-      appendLog("⚡ [EMERGENCY OVERRIDE] Dispatch Signal Executed Successfully!");
-      alert("🚨 EMERGENCY ALERT DISPATCHED!\n\nSignal registered on Command Dashboard in < 1ms.");
-    }
+                    if (data.gas > 1500 || data.flame > 50) {
+                        statusBox.innerText = "🚨 CRITICAL: FIRE OR GAS LEAK DETECTED!";
+                        statusBox.className = "global-alert alert-danger";
+                        
+                        if(data.gas > 1500) gasCard.style.borderColor = "#ef4444";
+                        if(data.flame > 50) fireCard.style.borderColor = "#ef4444";
+                    } else {
+                        statusBox.innerText = "[ SYSTEM ONLINE ] PERIMETER SECURE";
+                        statusBox.className = "global-alert alert-safe";
+                        gasCard.style.borderColor = "#334155";
+                        fireCard.style.borderColor = "#334155";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('systemStatus').innerText = "❌ CONNECTION LOST TO SENSOR NODE";
+                    document.getElementById('systemStatus').className = "global-alert alert-danger";
+                });
+        }
 
-    function appendLog(msg, isErr = false) {
-      const term = document.getElementById('terminal');
-      const time = new Date().toLocaleTimeString();
-      const div = document.createElement('div');
-      div.style.color = isErr ? '#ff0055' : '#00ff87';
-      div.innerText = `[${time}] ${msg}`;
-      term.appendChild(div);
-      term.scrollTop = term.scrollHeight;
-    }
-
-    // Initialize 6 Fluctuating Chart.js Graphs
-    const makeChart = (id, label, color) => new Chart(document.getElementById(id), {
-      type: 'line',
-      data: {
-        labels: ['1s','2s','3s','4s','5s','6s','7s','8s'],
-        datasets: [{ label, data: [12,19,15,25,22,30,28,35], borderColor: color, backgroundColor: color+'15', fill: true, tension: 0.4 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
-    });
-
-    const gasChart = makeChart('gasChart', 'Gas PPM', '#00f2fe');
-    const uvChart = makeChart('uvChart', 'UV Index', '#ff0055');
-    const ultraChart = makeChart('ultraChart', 'Distance (CM)', '#00ff87');
-    const tempChart = makeChart('tempChart', 'Temp (°C)', '#ff9900');
-    const pressChart = makeChart('pressChart', 'hPa', '#9d4edd');
-    const powerChart = makeChart('powerChart', 'mW', '#00f2fe');
-
-    // Live Graph Fluctuation Interval
-    setInterval(() => {
-      [gasChart, uvChart, ultraChart, tempChart, pressChart, powerChart].forEach(c => {
-        c.data.datasets[0].data.shift();
-        c.data.datasets[0].data.push(Math.floor(Math.random() * 45) + 10);
-        c.update();
-      });
-      
-      document.getElementById('pingVal').innerText = (Math.floor(Math.random() * 5) + 2) + "ms";
-    }, 1200);
-
-    // Auto-Log Activity Simulation
-    setInterval(() => {
-      appendLog(`[TELEMETRY] Packet synced from node ${Math.floor(Math.random() * 900) + 100}`);
-    }, 4000);
-
-    // ==========================================
-    // REAL-TIME BROWSER AI OBJECT DETECTION ENGINE
-    // ==========================================
-    const imgElement = document.getElementById('streamFeed');
-    const canvasElement = document.getElementById('aiCanvas');
-    const ctx = canvasElement.getContext('2d');
-    const aiStatusBadge = document.getElementById('aiStatus');
-
-    const ANIMAL_CLASSES = ['dog', 'cat', 'bird', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe'];
-
-    // Load TensorFlow COCO-SSD Model
-    cocoSsd.load().then(model => {
-      aiModel = model;
-      aiStatusBadge.innerText = "AI MODEL: ACTIVE";
-      aiStatusBadge.style.color = "#00ff87";
-      aiStatusBadge.style.borderColor = "#00ff87";
-      appendLog("TensorFlow COCO-SSD Detection Engine Loaded Successfully.");
-      detectObjects();
-    }).catch(err => {
-      aiStatusBadge.innerText = "AI MODEL: STANDBY";
-      appendLog("AI Model loaded in offline simulation mode.", false);
-    });
-
-    function detectObjects() {
-      if (!aiModel) return;
-
-      // Fit Canvas overlay to video stream dimensions
-      canvasElement.width = imgElement.clientWidth || 640;
-      canvasElement.height = imgElement.clientHeight || 380;
-
-      aiModel.detect(imgElement).then(predictions => {
-        ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-        predictions.forEach(prediction => {
-          if (prediction.score > 0.5) { // 50%+ Confidence Threshold
-            const [x, y, width, height] = prediction.bbox;
-            const className = prediction.class.toLowerCase();
-
-            let targetLabel = "";
-            let strokeColor = "#00f2fe";
-
-            if (className === 'person') {
-              targetLabel = `HUMAN (${Math.round(prediction.score * 100)}%)`;
-              strokeColor = "#00ff87"; // Green for Human
-              aiStatusBadge.innerText = "DETECTED: HUMAN";
-              aiStatusBadge.style.color = "#00ff87";
-            } else if (ANIMAL_CLASSES.includes(className)) {
-              targetLabel = `ANIMAL: ${className.toUpperCase()} (${Math.round(prediction.score * 100)}%)`;
-              strokeColor = "#ff9900"; // Orange for Animal
-              aiStatusBadge.innerText = `DETECTED: ANIMAL (${className.toUpperCase()})`;
-              aiStatusBadge.style.color = "#ff9900";
-            } else {
-              return; // Ignore non-living objects
-            }
-
-            // Draw Box
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 3;
-            ctx.strokeRect(x, y, width, height);
-
-            // Draw Background Label Badge
-            ctx.fillStyle = strokeColor;
-            ctx.font = "bold 14px Rajdhani, sans-serif";
-            const textWidth = ctx.measureText(targetLabel).width;
-            ctx.fillRect(x, y > 20 ? y - 20 : y, textWidth + 10, 20);
-
-            ctx.fillStyle = "#000";
-            ctx.fillText(targetLabel, x + 5, y > 20 ? y - 5 : y + 15);
-          }
-        });
-
-        requestAnimationFrame(detectObjects);
-      }).catch(() => {
-        setTimeout(detectObjects, 1000);
-      });
-    }
-  </script>
+        // Fetch data every 1 second
+        setInterval(updateDashboard, 1000);
+    </script>
 </body>
 </html>
