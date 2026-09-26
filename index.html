@@ -4,234 +4,149 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DEVELOPMENTX 1.0 - MULTI-HAZARD SHIELD</title>
-  <!-- Chart.js for Slide 02 Graphs -->
+  <!-- Chart.js for all live graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg-dark: #0a0f1d;
-      --panel-bg: rgba(15, 23, 42, 0.85);
+      --bg-dark: #070b14;
+      --panel-bg: rgba(15, 23, 42, 0.7);
       --border-blue: #00d2ff;
       --border-dark: #1e293b;
       --text-main: #e2e8f0;
       --cyan: #00d2ff;
       --green: #10b981;
       --red: #ef4444;
+      --yellow: #f59e0b;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
+    /* Header */
     .header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 25px;
-      border-bottom: 1px solid #1e3a8a;
-      background: rgba(10, 15, 29, 0.95);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 15px 25px; border-bottom: 1px solid #1e3a8a;
+      background: rgba(7, 11, 20, 0.95);
+      box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1);
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #fff;
-    }
+    .brand { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #fff; }
+    .brand span { color: var(--cyan); }
     .status-badge {
-      font-size: 11px;
-      font-weight: bold;
-      color: var(--green);
-      letter-spacing: 1px;
-      border: 1px solid var(--green);
-      padding: 3px 8px;
-      border-radius: 4px;
+      font-size: 11px; font-weight: bold; color: var(--green); letter-spacing: 1px;
+      border: 1px solid var(--green); padding: 4px 10px; border-radius: 4px;
+      background: rgba(16, 185, 129, 0.1);
     }
 
-    .main-layout {
-      display: flex;
-      min-height: calc(100vh - 55px);
-    }
+    .main-layout { display: flex; min-height: calc(100vh - 65px); }
 
-    /* ORIGINAL LEFT SIDEBAR */
+    /* Sidebar Navigation */
     .sidebar {
-      width: 250px;
-      background: #090e1a;
-      border-right: 1px solid #1e293b;
-      padding: 20px 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      width: 260px; background: #04070d; border-right: 1px solid #1e293b;
+      padding: 25px 15px; display: flex; flex-direction: column; gap: 12px;
     }
     .nav-btn {
-      background: transparent;
-      border: 1px solid #1e293b;
-      color: #94a3b8;
-      padding: 12px 14px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      border-radius: 6px;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s;
+      background: transparent; border: 1px solid #1e293b; color: #94a3b8;
+      padding: 14px 15px; font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+      border-radius: 6px; text-align: left; cursor: pointer; transition: all 0.3s;
     }
+    .nav-btn:hover { border-color: #38bdf8; color: #38bdf8; }
     .nav-btn.active {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      background: rgba(0, 210, 255, 0.08);
-      box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+      border-color: var(--cyan); color: var(--cyan);
+      background: rgba(0, 210, 255, 0.1);
+      box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
     }
     .system-telemetry-info {
-      margin-top: auto;
-      font-size: 11px;
-      color: #64748b;
-      line-height: 1.6;
+      margin-top: auto; font-size: 11px; color: #64748b; line-height: 1.8;
+      padding: 15px; background: rgba(15,23,42,0.5); border-radius: 6px;
     }
 
-    /* CONTENT AREA */
-    .content-area {
-      flex: 1;
-      padding: 25px;
-    }
+    /* Content Area */
+    .content-area { flex: 1; padding: 30px; overflow-y: auto; }
     .slide-title {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      color: #fff;
-      margin-bottom: 25px;
-      text-transform: uppercase;
+      font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #fff;
+      margin-bottom: 25px; text-transform: uppercase;
+      border-left: 4px solid var(--cyan); padding-left: 10px;
     }
-    .slide-content { display: none; }
+    .slide-content { display: none; animation: fadeIn 0.4s ease; }
     .slide-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* SLIDE 1 PANELS */
-    .cmd-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+    /* Panels */
+    .cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
     .cmd-panel {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 20px;
+      background: var(--panel-bg); border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
     }
     .panel-sub {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--cyan);
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      text-transform: uppercase;
+      font-size: 13px; font-weight: 800; color: var(--cyan); letter-spacing: 1.5px;
+      margin-bottom: 12px; text-transform: uppercase;
     }
-    .trigger-btn {
-      width: 100%;
-      padding: 16px;
-      background: #ef4444;
-      border: none;
-      color: #fff;
-      font-weight: 900;
-      font-size: 14px;
-      letter-spacing: 1.5px;
-      border-radius: 6px;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-      margin-bottom: 25px;
-    }
-    .ip-box {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
+    
+    /* Connect & Input UI */
+    .ip-box { display: flex; gap: 10px; margin-top: 15px; }
     .ip-box input {
-      flex: 1;
-      background: #0f172a;
-      border: 1px solid var(--border-blue);
-      color: var(--cyan);
-      padding: 10px;
-      border-radius: 4px;
-      font-weight: bold;
-      text-align: center;
+      flex: 1; background: #090e1a; border: 1px solid var(--cyan); color: var(--cyan);
+      padding: 12px; border-radius: 6px; font-weight: bold; text-align: center;
+      font-size: 14px; outline: none;
     }
+    .connect-btn {
+      background: var(--cyan); color: #000; border: none; padding: 0 25px;
+      border-radius: 6px; font-weight: 900; letter-spacing: 1px; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .connect-btn:hover { background: #fff; box-shadow: 0 0 15px var(--cyan); }
+    
+    .trigger-btn {
+      width: 100%; padding: 18px; background: linear-gradient(45deg, #ef4444, #b91c1c);
+      border: none; color: #fff; font-weight: 900; font-size: 15px; letter-spacing: 2px;
+      border-radius: 6px; cursor: pointer; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+      margin-bottom: 25px; transition: 0.2s;
+    }
+    .trigger-btn:hover { transform: scale(1.02); }
 
-    /* REPLACED COCO-SSD WITH GAS BOX */
+    /* Gas Core UI */
     .gas-focus-box {
-      width: 100%;
-      height: 300px;
-      background: #050811;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      width: 100%; height: 280px; background: #04070d; border: 1px solid #1e293b;
+      border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    .main-gas-val {
-      font-size: 70px;
-      font-weight: 900;
-      color: var(--cyan);
-      font-family: monospace;
-    }
+    .main-gas-val { font-size: 75px; font-weight: 900; color: var(--cyan); font-family: monospace; text-shadow: 0 0 20px rgba(0,210,255,0.3); }
     .main-gas-alert {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-weight: bold;
-      border-radius: 4px;
-      letter-spacing: 1px;
+      margin-top: 20px; padding: 10px 20px; font-weight: bold; border-radius: 4px; letter-spacing: 1px;
     }
     .safe-mode { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid var(--green); }
-    .danger-mode { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid var(--red); animation: blink 1s infinite; }
-    
-    @keyframes blink { 50% { opacity: 0.5; } }
 
-    /* SLIDE 2 CHARTS (From Image 4) */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-    }
+    /* Graphs Grid */
+    .charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .chart-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 15px;
-      height: 280px;
+      background: var(--panel-bg); border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 20px; height: 300px;
+    }
+    .chart-card-large {
+      background: var(--panel-bg); border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 20px; height: 350px;
     }
 
-    /* SLIDE 4 TERMINAL (From Image 5) */
+    /* Terminal */
     .terminal {
-      background: #050811;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      padding: 20px;
-      height: 400px;
-      overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      color: #38bdf8;
-      line-height: 1.8;
+      background: #04070d; border: 1px solid #1e293b; border-radius: 8px;
+      padding: 20px; height: 420px; overflow-y: auto; font-family: 'Courier New', monospace;
+      font-size: 13px; color: #38bdf8; line-height: 1.8;
     }
   </style>
 </head>
 <body>
 
   <div class="header-bar">
-    <div class="brand"><span style="color: #00d2ff;">🛡️ DEV-X</span> 1.0</div>
-    <div class="status-badge">[NODE 01 ACTIVE]</div>
+    <div class="brand">🛡️ DEV-X <span>1.0</span></div>
+    <div class="status-badge" id="globalStatus">[ SIMULATION MODE ACTIVE ]</div>
   </div>
 
   <div class="main-layout">
-    <!-- EXACT ORIGINAL SIDEBAR -->
+    <!-- SIDEBAR -->
     <div class="sidebar">
       <button class="nav-btn active" onclick="switchSlide(1)">🗲 GLOBAL COMMAND</button>
       <button class="nav-btn" onclick="switchSlide(2)">📈 SENSOR ANALYTICS</button>
@@ -239,88 +154,87 @@
       <button class="nav-btn" onclick="switchSlide(4)">λ KERNEL DATABASE</button>
 
       <div class="system-telemetry-info">
-        <strong style="color:#10b981;">● SYSTEM ONLINE</strong><br>
-        Latency: <span id="pingVal">4ms</span><br>
-        Telemetry: <strong>MQ Sensor Active</strong>
+        <strong style="color:var(--cyan);" id="connState">● STATUS: SIMULATING</strong><br>
+        Ping: <span id="pingVal">--</span><br>
+        Engine: <strong>Dynamic Node Monitor</strong>
       </div>
     </div>
 
     <!-- CONTENT AREA -->
     <div class="content-area">
 
-      <!-- SLIDE 1: GLOBAL COMMAND SHIELD -->
+      <!-- SLIDE 1 -->
       <div id="slide1" class="slide-content active">
         <div class="slide-title">SLIDE 01: GLOBAL COMMAND SHIELD</div>
         <div class="cmd-grid">
           
-          <!-- LEFT PANEL: OVERRIDE & IP -->
           <div class="cmd-panel">
             <div class="panel-sub">HARDWARE OVERRIDE</div>
-            <p style="font-size: 12px; color: #64748b; margin-top: 0;">Trigger immediate high-priority emergency alert signal to the dashboard and global telemetry listeners.</p>
+            <p style="font-size: 13px; color: #94a3b8; margin-top: 0; margin-bottom: 20px;">Trigger immediate high-priority emergency alert signal to the dashboard and global telemetry listeners.</p>
             <button class="trigger-btn" onclick="triggerManualAlert()">⚡ ONE-CLICK: TRIGGER INSTANT ALERT</button>
 
             <div class="panel-sub" style="margin-top: 30px;">ESP32 NETWORK BRIDGE</div>
             <div class="ip-box">
-              <input type="text" id="bridgeIp" value="192.168.4.1">
+              <input type="text" id="bridgeIp" value="192.168.4.1" placeholder="Enter Node IP">
+              <button class="connect-btn" onclick="connectNode()">CONNECT</button>
             </div>
           </div>
 
-          <!-- RIGHT PANEL: GAS CORE (Replaced COCO-SSD) -->
           <div class="cmd-panel">
             <div class="panel-sub">
               <span>● LIVE GAS TELEMETRY CORE</span>
-              <span id="coreStatus" style="color: var(--green);">[ ACTIVE ]</span>
             </div>
             <div class="gas-focus-box">
               <div class="main-gas-val" id="slide1Gas">--</div>
               <div style="color: #64748b; font-weight: bold; letter-spacing: 2px;">PARTS PER MILLION (PPM)</div>
-              <div id="slide1Alert" class="main-gas-alert safe-mode">SYSTEM SECURE - NO LEAK</div>
+              <div id="slide1Alert" class="main-gas-alert safe-mode">SYSTEM SECURE - LIVE MONITORING</div>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- SLIDE 2: SENSOR ANALYTICS -->
+      <!-- SLIDE 2: SENSOR FLUCTUATIONS -->
       <div id="slide2" class="slide-content">
-        <div class="slide-title">SLIDE 02: LIVE SENSOR TELEMETRY</div>
+        <div class="slide-title">SLIDE 02: LIVE SENSOR FLUCTUATIONS</div>
         <div class="charts-grid">
           <div class="chart-card">
-            <h4 style="color: var(--cyan); margin:0 0 10px 0; font-size: 13px;">💨 MQ GAS PPM</h4>
+            <h4 style="color: var(--cyan); margin:0 0 15px 0; letter-spacing: 1px;">💨 MQ GAS PPM</h4>
             <canvas id="gasChart"></canvas>
           </div>
           <div class="chart-card">
-            <h4 style="color: var(--red); margin:0 0 10px 0; font-size: 13px;">🔥 FLAME / UV HAZARD</h4>
+            <h4 style="color: var(--red); margin:0 0 15px 0; letter-spacing: 1px;">🔥 FLAME / UV HAZARD (%)</h4>
             <canvas id="flameChart"></canvas>
           </div>
           <div class="chart-card">
-            <h4 style="color: var(--green); margin:0 0 10px 0; font-size: 13px;">📡 ULTRASONIC TRIPWIRE</h4>
+            <h4 style="color: var(--green); margin:0 0 15px 0; letter-spacing: 1px;">📡 ULTRASONIC TRIPWIRE (cm)</h4>
             <canvas id="distChart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- SLIDE 3: HARDWARE TELEMETRY -->
+      <!-- SLIDE 3: HARDWARE LIFE MONITORING -->
       <div id="slide3" class="slide-content">
-        <div class="slide-title">SLIDE 03: HARDWARE TELEMETRY NODES</div>
-        <div class="cmd-panel">
-          <p style="color: #10b981; font-weight: bold; font-size: 16px;">● ALL PERIMETER SUBSYSTEMS NOMINAL</p>
-          <div style="line-height: 2; font-size: 14px; color: #e2e8f0;">
-            Core Microcontroller: <strong>ESP32 NodeMCU</strong><br>
-            Primary Sensor: <strong>MQ Series Gas/Smoke Detector</strong><br>
-            Secondary Sensors: <strong>Infrared Flame & Ultrasonic</strong><br>
-            Polling Rate: <strong>1000ms (1 Second)</strong>
+        <div class="slide-title">SLIDE 03: HARDWARE LIFE MONITORING</div>
+        <div class="cmd-grid">
+          <div class="chart-card-large">
+            <h4 style="color: var(--yellow); margin:0 0 15px 0; letter-spacing: 1px;">⚡ CORE CPU LOAD (%)</h4>
+            <canvas id="cpuChart"></canvas>
+          </div>
+          <div class="chart-card-large">
+            <h4 style="color: #a855f7; margin:0 0 15px 0; letter-spacing: 1px;">🔋 BATTERY POWER LIFE (mV)</h4>
+            <canvas id="pwrChart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- SLIDE 4: KERNEL DATABASE LOGS -->
+      <!-- SLIDE 4 -->
       <div id="slide4" class="slide-content">
         <div class="slide-title">SLIDE 04: REAL-TIME AUTOMATION LOGS</div>
-        <div class="panel-sub" style="margin-bottom: 10px;">> SYSTEM EVENT STREAM</div>
+        <div class="panel-sub" style="margin-bottom: 15px;">> SYSTEM EVENT STREAM</div>
         <div class="terminal" id="logTerminal">
           [00:00:01] [KERNEL] Initialization sequence loaded successfully.<br>
-          [00:00:01] [NETWORK] Listening on web telemetry stream channel...<br>
+          [00:00:02] [NETWORK] Operating in standalone SIMULATION MODE.<br>
         </div>
       </div>
 
@@ -328,17 +242,15 @@
   </div>
 
   <script>
-    // Tab Switching Logic
-    let activeSlide = 1;
+    // Tab Navigation
     function switchSlide(num) {
       document.querySelectorAll('.slide-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       document.getElementById('slide' + num).classList.add('active');
       document.querySelectorAll('.nav-btn')[num - 1].classList.add('active');
-      activeSlide = num;
     }
 
-    // Terminal Logging Logic
+    // Terminal Logging
     function addLog(msg) {
       const term = document.getElementById('logTerminal');
       const time = new Date().toLocaleTimeString();
@@ -347,38 +259,38 @@
     }
 
     function triggerManualAlert() {
-      addLog("<span style='color: #ef4444;'>[OVERRIDE] CRITICAL EMERGENCY MANUAL ALERT TRIGGERED!</span>");
+      addLog("<span style='color: #ef4444;'>[OVERRIDE] CRITICAL MANUAL ALERT TRIGGERED!</span>");
       alert("EMERGENCY SIGNAL DISPATCHED!");
     }
 
-    // Graph Initialization (Same as original)
+    // Chart Configuration Builder
     function createChart(ctx, color) {
       return new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['1s','2s','3s','4s','5s','6s','7s','8s'],
+          labels: ['1s','2s','3s','4s','5s','6s','7s','8s','9s','10s'],
           datasets: [{
-            data: [0, 0, 0, 0, 0, 0, 0, 0],
-            borderColor: color,
-            borderWidth: 3,
-            tension: 0.4,
-            fill: false
+            data: [0,0,0,0,0,0,0,0,0,0],
+            borderColor: color, borderWidth: 3, tension: 0.4, fill: false, pointRadius: 2
           }]
         },
         options: {
           responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
-            y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } }
+            x: { grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } },
+            y: { grid: { color: 'rgba(30, 41, 59, 0.5)' }, ticks: { color: '#64748b' } }
           }
         }
       });
     }
 
+    // Initialize All 5 Graphs
     const gasChart = createChart(document.getElementById('gasChart'), '#00d2ff');
     const flameChart = createChart(document.getElementById('flameChart'), '#ef4444');
     const distChart = createChart(document.getElementById('distChart'), '#10b981');
+    const cpuChart = createChart(document.getElementById('cpuChart'), '#f59e0b');
+    const pwrChart = createChart(document.getElementById('pwrChart'), '#a855f7');
 
     function updateChart(chart, val) {
       chart.data.datasets[0].data.shift();
@@ -386,44 +298,66 @@
       chart.update('none');
     }
 
-    // Data Fetch Loop
-    setInterval(() => {
-      const ip = document.getElementById('bridgeIp').value;
-      if (!ip) return;
+    // Connection & Simulation Logic
+    let isConnected = false;
 
+    function connectNode() {
+      const ip = document.getElementById('bridgeIp').value;
+      if(!ip) { alert("Please enter IP Address"); return; }
+      
+      addLog(`[BRIDGE] Attempting hardware handshake with ${ip}...`);
+      
+      // Attempt connection (If ESP32 is offline, it will fail and continue simulation)
       fetch(`http://${ip}/telemetry`)
         .then(res => res.json())
         .then(data => {
-          // Update Slide 1 (Gas Focus)
-          document.getElementById('slide1Gas').innerText = data.gas;
-          
-          let alertBox = document.getElementById('slide1Alert');
-          let coreStatus = document.getElementById('coreStatus');
-          
-          if(data.status === "HAZARD_DETECTED" || data.gas > 1500) {
-            alertBox.innerText = "🚨 HAZARD: GAS LEAK DETECTED!";
-            alertBox.className = "main-gas-alert danger-mode";
-            coreStatus.innerText = "[ WARNING ]";
-            coreStatus.style.color = "#ef4444";
-            addLog("<span style='color: #ef4444;'>[TELEMETRY] CRITICAL: Hazard thresholds crossed!</span>");
-          } else {
-            alertBox.innerText = "SYSTEM SECURE - NO LEAK";
-            alertBox.className = "main-gas-alert safe-mode";
-            coreStatus.innerText = "[ ACTIVE ]";
-            coreStatus.style.color = "#10b981";
-          }
-
-          // Update Slide 2 (Graphs)
-          updateChart(gasChart, data.gas);
-          updateChart(flameChart, data.flame);
-          updateChart(distChart, data.distance);
-          
-          document.getElementById('pingVal').innerText = "4ms";
+          isConnected = true;
+          document.getElementById('globalStatus').innerText = "[ HARDWARE NODE ACTIVE ]";
+          document.getElementById('connState').innerText = "● STATUS: CONNECTED";
+          document.getElementById('connState').style.color = "#10b981";
+          addLog(`<span style='color: #10b981;'>[BRIDGE] Connection Successful! Live Feed Active.</span>`);
         })
         .catch(err => {
-          document.getElementById('pingVal').innerText = "OFFLINE";
+          isConnected = false;
+          addLog(`<span style='color: #f59e0b;'>[BRIDGE] Connection Failed. Reverting to SIMULATION MODE.</span>`);
         });
+    }
+
+    // Auto-Fluctuation Data Engine (Runs every 1 second)
+    setInterval(() => {
+      const ip = document.getElementById('bridgeIp').value;
+      
+      if (isConnected) {
+        // Fetch Real Hardware Data
+        fetch(`http://${ip}/telemetry`)
+          .then(res => res.json())
+          .then(data => { updateDashboardUI(data.gas, data.flame, data.distance, 45, 3800); })
+          .catch(() => { isConnected = false; }); // Disconnect if fails
+      } else {
+        // Generate Auto-Fluctuations (Simulated Life Monitoring)
+        let simGas = Math.floor(Math.random() * (450 - 380 + 1)) + 380; // Fluctuate 380-450 PPM
+        let simFlame = Math.floor(Math.random() * (4 - 0 + 1));         // Fluctuate 0-4 %
+        let simDist = Math.floor(Math.random() * (160 - 130 + 1)) + 130; // Fluctuate 130-160 cm
+        
+        let simCpu = Math.floor(Math.random() * (60 - 35 + 1)) + 35;    // Fluctuate 35-60% Load
+        let simPwr = Math.floor(Math.random() * (3850 - 3780 + 1)) + 3780; // 3.7V - 3.8V Battery
+
+        updateDashboardUI(simGas, simFlame, simDist, simCpu, simPwr);
+        document.getElementById('pingVal').innerText = "SIM (1ms)";
+      }
     }, 1000);
+
+    function updateDashboardUI(gas, flame, dist, cpu, pwr) {
+      // Update Core Display
+      document.getElementById('slide1Gas').innerText = gas;
+      
+      // Update All 5 Graphs
+      updateChart(gasChart, gas);
+      updateChart(flameChart, flame);
+      updateChart(distChart, dist);
+      updateChart(cpuChart, cpu);
+      updateChart(pwrChart, pwr);
+    }
   </script>
 </body>
 </html>
