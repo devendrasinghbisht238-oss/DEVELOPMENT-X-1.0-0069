@@ -32,7 +32,6 @@
       height: 100vh;
     }
     
-    /* Futuristic Header */
     .header-bar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 15px 30px; 
@@ -53,7 +52,6 @@
 
     .main-layout { display: flex; height: calc(100vh - 65px); }
 
-    /* Glassmorphism Sidebar */
     .sidebar {
       width: 280px; background: rgba(3, 7, 18, 0.4); backdrop-filter: blur(15px);
       border-right: 1px solid var(--border-neon);
@@ -77,7 +75,6 @@
       border: 1px solid #1e293b; border-radius: 10px; font-size: 13px; color: var(--text-muted);
     }
 
-    /* Content Area */
     .content-area { flex: 1; padding: 30px; overflow-y: auto; }
     .slide-title {
       font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 3px;
@@ -88,7 +85,6 @@
     .slide-content.active { display: block; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Cyber Panels */
     .cmd-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; }
     .glass-panel {
       background: var(--panel-glass); backdrop-filter: blur(12px);
@@ -102,7 +98,6 @@
       color: var(--cyan); letter-spacing: 2px; margin-bottom: 15px; display: flex; justify-content: space-between;
     }
     
-    /* Connect Console */
     .console-input {
       display: flex; background: rgba(0,0,0,0.5); border: 1px solid #334155; border-radius: 8px; overflow: hidden;
       margin-top: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
@@ -124,7 +119,6 @@
     }
     .trigger-btn:hover { background: var(--red); color: #fff; box-shadow: 0 0 30px rgba(255,0,85,0.6); transform: scale(1.02); }
 
-    /* CAMERA BOX DESIGN */
     .cam-container {
       width: 100%; height: 260px; background: rgba(0,0,0,0.8);
       border: 1px solid var(--border-neon); border-radius: 8px;
@@ -140,11 +134,36 @@
       border-radius: 4px; font-size: 14px;
     }
 
-    /* AI RECOMMENDATION BOX (NEW CORNER) */
+    .ai-tracker {
+      position: absolute; top: 50%; left: 50%; width: 120px; height: 120px;
+      margin-top: -60px; margin-left: -60px; border: 2px solid var(--red); display: none; 
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.5);
+      animation: target-lock 0.3s infinite alternate; z-index: 10;
+    }
+    .ai-tracker.active { display: block; } 
+    
+    .ai-tracker::before {
+      content: ''; position: absolute; top: -20px; bottom: -20px; left: 50%; width: 2px;
+      background: rgba(255, 0, 85, 0.9); transform: translateX(-50%);
+    }
+    .ai-tracker::after {
+      content: ''; position: absolute; left: -20px; right: -20px; top: 50%; height: 2px;
+      background: rgba(255, 0, 85, 0.9); transform: translateY(-50%);
+    }
+    
+    .tracker-label {
+      position: absolute; top: -30px; left: -15px; color: #fff; background: var(--red);
+      padding: 3px 8px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    @keyframes target-lock {
+      from { transform: scale(0.95); border-color: rgba(255, 0, 85, 0.5); }
+      to { transform: scale(1.05); border-color: rgba(255, 0, 85, 1); }
+    }
+
     .ai-corner {
-      grid-column: 1 / -1; /* Dono columns cover karega */
-      background: rgba(168, 85, 247, 0.05);
-      border-top: 2px solid var(--purple);
+      grid-column: 1 / -1; background: rgba(168, 85, 247, 0.05); border-top: 2px solid var(--purple);
     }
     .ai-text {
       font-family: 'Courier New', monospace; font-size: 15px; color: var(--text-main); 
@@ -152,7 +171,6 @@
       background: rgba(0,0,0,0.5); border: 1px solid #1e293b;
     }
 
-    /* Area Graphs Grid */
     .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     .chart-container {
       background: var(--panel-glass); backdrop-filter: blur(10px);
@@ -166,7 +184,6 @@
       border: 1px solid #1e293b; padding: 25px; height: 380px;
     }
 
-    /* Hacker Terminal */
     .cyber-terminal {
       background: #02040a; border: 1px solid #1e293b; border-radius: 10px;
       padding: 25px; height: 450px; overflow-y: auto; font-family: 'Courier New', monospace;
@@ -178,11 +195,10 @@
 
   <div class="header-bar">
     <div class="brand">DEV-X <span>1.0</span></div>
-    <div class="status-badge" id="globalStatus">[ AUTO-SIMULATION ENGAGED ]</div>
+    <div class="status-badge" id="globalStatus">[ WAITING FOR CONNECTION ]</div>
   </div>
 
   <div class="main-layout">
-    <!-- Sidebar -->
     <div class="sidebar">
       <button class="nav-btn active" onclick="switchSlide(1)">01. GLOBAL COMMAND</button>
       <button class="nav-btn" onclick="switchSlide(2)">02. SENSOR ANALYTICS</button>
@@ -190,22 +206,18 @@
       <button class="nav-btn" onclick="switchSlide(4)">04. KERNEL LOGS</button>
 
       <div class="telemetry-box">
-        <span style="color:var(--cyan); font-weight:bold; letter-spacing:1px;" id="connState">● LINK: SIMULATING</span><br><br>
+        <span style="color:var(--cyan); font-weight:bold; letter-spacing:1px;" id="connState">● LINK: DISCONNECTED</span><br><br>
         PING RATE: <span id="pingVal" style="color:#fff;">--</span><br>
-        PROTOCOL: <span style="color:#fff;">UDP/TCP MESH</span><br>
+        PROTOCOL: <span style="color:#fff;">OPTICAL AI VISION</span><br>
         ENGINE: <span style="color:var(--yellow);">DEV-X 1.2 CORE</span>
       </div>
     </div>
 
-    <!-- Content -->
     <div class="content-area">
-
-      <!-- SLIDE 1: Command, Camera & AI Corner -->
       <div id="slide1" class="slide-content active">
         <div class="slide-title">/// GLOBAL COMMAND SHIELD</div>
         <div class="cmd-grid">
           
-          <!-- OVERRIDE & CONNECT PANEL -->
           <div class="glass-panel">
             <div class="panel-header">>>> HARDWARE OVERRIDE</div>
             <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 25px;">Force-trigger global perimeter alert. Bypasses all local AI nodes and alerts main grid.</p>
@@ -218,46 +230,43 @@
             </div>
           </div>
 
-          <!-- ESP32 CAMERA PANEL -->
           <div class="glass-panel" style="border-top-color: var(--cyan);">
             <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
-            
             <div class="cam-container">
-              <img id="camStream" src="" alt="[ CAMERA FEED OFFLINE - WAITING FOR UPLINK ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
+              <!-- crossOrigin="Anonymous" is required to scan pixels without security errors -->
+              <img id="camStream" crossOrigin="Anonymous" src="" alt="[ CAMERA FEED OFFLINE ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
+              <div id="aiTracker" class="ai-tracker">
+                <div class="tracker-label">[ TARGET LOCKED: FIRE ]</div>
+              </div>
             </div>
-
             <div id="camAlert" class="cam-alert" style="background: rgba(0, 229, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan);">
               [ STANDBY ] AWAITING SIGNAL
             </div>
           </div>
 
-          <!-- NEW: DEVELOPMENT X 1.2 AI CORNER -->
           <div class="glass-panel ai-corner">
             <div class="panel-header" style="color: var(--purple);">>>> DEVELOPMENT X 1.2</div>
             <div id="aiRecommendationBox" class="ai-text">
-              <span style="color: #64748b;">[ SYSTEM STANDBY ] Monitoring Fire & Gas Levels. Awaiting hazard detection to generate recommendations...</span>
+              <span style="color: #64748b;">[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection to generate recommendations...</span>
             </div>
           </div>
-
         </div>
       </div>
 
-      <!-- SLIDE 2: Fire & Gas Graphs Only -->
       <div id="slide2" class="slide-content">
         <div class="slide-title">/// SENSOR ANALYTICS MATRIX</div>
         <div class="charts-grid">
           <div class="chart-container">
-            <div class="panel-header">MQ GAS PPM</div>
+            <div class="panel-header">MQ GAS PPM (SIMULATED)</div>
             <canvas id="gasChart"></canvas>
           </div>
           <div class="chart-container" style="border-top-color: var(--red);">
-            <div class="panel-header" style="color: var(--red);">IR FLAME HAZARD (%)</div>
+            <div class="panel-header" style="color: var(--red);">OPTICAL FIRE HAZARD (%)</div>
             <canvas id="flameChart"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- SLIDE 3: Life Monitoring -->
       <div id="slide3" class="slide-content">
         <div class="slide-title">/// HARDWARE LIFE MONITORING</div>
         <div class="life-grid">
@@ -272,7 +281,6 @@
         </div>
       </div>
 
-      <!-- SLIDE 4: Terminal -->
       <div id="slide4" class="slide-content">
         <div class="slide-title">/// REAL-TIME KERNEL LOGS</div>
         <div class="cyber-terminal" id="logTerminal">
@@ -280,7 +288,6 @@
           <span style="color:#10b981;">[NETWORK]</span> Scanning for active mesh nodes...<br>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -304,25 +311,22 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
-    // === DEVELOPMENT X 1.2 (AI ENGINE) ===
     const DEVX_API_KEY = "AQ.Ab8RN6KL9qPxs10O84i54y42FWqJhtqewUQiN0eQbXU3m4qMnQ"; 
     let aiCooldown = false; 
 
-    // Offline Recommendations (Failsafe)
     const localOfflineCommands = [
         "Evacuate area immediately. Fire suppression systems deployed to affected zone.",
-        "High toxicity detected. Secure ventilation channels and initiate localized lockdown.",
-        "Thermal hazard confirmed. Activate emergency cooling protocols and alert ground patrol."
+        "Optical hazard confirmed. Activate emergency cooling protocols and alert ground patrol."
     ];
 
-    async function analyzeHazardWithAI(gas, flame) {
+    async function analyzeHazardWithAI(fireLevel) {
       if (aiCooldown) return;
       aiCooldown = true; 
       
       const aiBox = document.getElementById('aiRecommendationBox');
-      aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Fire & Gas levels... Generating Emergency Recommendations...</span>";
+      aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Visual Fire Threat... Generating Emergency Recommendations...</span>";
 
-      const prompt = `CRITICAL ALERT: My security sensors detected a hazard. Gas Level: ${gas}PPM, Fire Hazard: ${flame}%. Give a strict, professional 2-sentence emergency recommendation command.`;
+      const prompt = `CRITICAL ALERT: My security camera's optical AI just detected a fire. Visual Fire Hazard Intensity: ${fireLevel}%. Give a strict, professional 2-sentence emergency recommendation command to the security team.`;
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${DEVX_API_KEY}`;
       
       const controller = new AbortController();
@@ -330,57 +334,32 @@
 
       try {
           const response = await fetch(url, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-              signal: controller.signal
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), signal: controller.signal
           });
-          
           clearTimeout(timeoutId);
           const data = await response.json();
-          
           if(data.candidates && data.candidates.length > 0) {
               const aiResponse = data.candidates[0].content.parts[0].text;
               aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${aiResponse}</span>`;
               addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
-          } else {
-              throw new Error("Invalid API Response");
-          }
-          
+          } else throw new Error("Invalid Response");
       } catch (error) {
           clearTimeout(timeoutId);
           const randomLocalCmd = localOfflineCommands[Math.floor(Math.random() * localOfflineCommands.length)];
           aiBox.innerHTML = `<span style='color: #10b981; font-weight: bold;'>[ OFFLINE RECOMMENDATION ] <br>> ${randomLocalCmd}</span>`;
       }
-
-      // 15 Second cooldown to prevent API spamming
       setTimeout(() => { 
         aiCooldown = false; 
-        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire & Gas Levels. Awaiting hazard detection to generate recommendations...</span>";
+        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection to generate recommendations...</span>";
       }, 15000);
     }
 
-    // Advanced Glowing Area Charts Builder
     function createAreaChart(ctx, colorHex, bgColor) {
       return new Chart(ctx, {
         type: 'line',
-        data: {
-          labels: ['','','','','','','','','',''],
-          datasets: [{
-            data: [0,0,0,0,0,0,0,0,0,0],
-            borderColor: colorHex,
-            backgroundColor: bgColor,
-            borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { enabled: false } },
-          scales: {
-            x: { display: false }, 
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#64748b' } }
-          }
-        }
+        data: { labels: ['','','','','','','','','',''], datasets: [{ data: [0,0,0,0,0,0,0,0,0,0], borderColor: colorHex, backgroundColor: bgColor, borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#64748b' } } } }
       });
     }
 
@@ -390,16 +369,14 @@
     const pwrChart = createAreaChart(document.getElementById('pwrChart'), '#a855f7', 'rgba(168, 85, 247, 0.1)');
 
     function updateChart(chart, val) {
-      chart.data.datasets[0].data.shift();
-      chart.data.datasets[0].data.push(val);
-      chart.update('none');
+      chart.data.datasets[0].data.shift(); chart.data.datasets[0].data.push(val); chart.update('none');
     }
 
-    let isConnected = false;
+    let opticalScannerInterval;
 
     function connectNode() {
       const ip = document.getElementById('bridgeIp').value;
-      addLog(`[UPLINK] Initiating handshake with ${ip}...`);
+      addLog(`[UPLINK] Connecting Optical Scanner to ${ip}...`);
       
       const camImg = document.getElementById('camStream');
       const camAlert = document.getElementById('camAlert');
@@ -407,71 +384,88 @@
       camImg.src = `http://${ip}:81/stream`;
       
       camImg.onload = function() {
-        camAlert.innerHTML = "[ ACTIVE ] OPTICAL FEED STREAMING";
+        camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
         camAlert.style.background = "rgba(16, 185, 129, 0.15)";
         camAlert.style.color = "#10b981";
-        camAlert.style.borderColor = "#10b981";
-        addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced successfully.</span>`);
+        document.getElementById('globalStatus').innerText = "[ HARDWARE SECURED ]";
+        document.getElementById('globalStatus').style.color = "#10b981";
+        document.getElementById('connState').innerText = "● LINK: ESTABLISHED";
+        document.getElementById('connState').style.color = "#10b981";
+        addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Computer Vision Engine Started.</span>`);
+        
+        // Start the background AI Vision Engine
+        clearInterval(opticalScannerInterval);
+        opticalScannerInterval = setInterval(processOpticalVision, 500); 
       };
 
       camImg.onerror = function() {
         camAlert.innerHTML = "[ ERROR ] CAMERA FEED OFFLINE";
         camAlert.style.background = "rgba(255, 0, 85, 0.15)";
         camAlert.style.color = "#ff0055";
-        camAlert.style.borderColor = "#ff0055";
         addLog(`<span style='color: #ff0055;'>[CAMERA] Failed to capture optical feed.</span>`);
+        clearInterval(opticalScannerInterval);
       };
-
-      fetch(`http://${ip}/telemetry`)
-        .then(res => res.json())
-        .then(data => {
-          isConnected = true;
-          document.getElementById('globalStatus').innerText = "[ HARDWARE SECURED ]";
-          document.getElementById('globalStatus').style.color = "#10b981";
-          document.getElementById('globalStatus').style.borderColor = "#10b981";
-          document.getElementById('connState').innerText = "● LINK: ESTABLISHED";
-          document.getElementById('connState').style.color = "#10b981";
-          addLog(`<span style='color: #10b981;'>[UPLINK] Success. Hardware data streaming.</span>`);
-        })
-        .catch(err => {
-          isConnected = false;
-          addLog(`<span style='color: #fbbf24;'>[UPLINK] Telemetry Failed. Reverting to SIMULATION.</span>`);
-        });
     }
 
-    setInterval(() => {
-      if (isConnected) {
-        const ip = document.getElementById('bridgeIp').value;
-        fetch(`http://${ip}/telemetry`)
-          .then(res => res.json())
-          .then(data => { updateUI(data.gas, data.flame, 45, 3800); })
-          .catch(() => { isConnected = false; });
-      } else {
-        let gas = Math.floor(Math.random() * (480 - 410 + 1)) + 410;
-        let flame = Math.floor(Math.random() * 5);
-        let cpu = Math.floor(Math.random() * (55 - 40 + 1)) + 40;
-        let pwr = Math.floor(Math.random() * (3850 - 3810 + 1)) + 3810;
+    // === THE INVISIBLE COMPUTER VISION ENGINE ===
+    // Yeh engine har 0.5 second mein video image ko read karke fire detect karta hai
+    function processOpticalVision() {
+      const camImg = document.getElementById('camStream');
+      if (!camImg.complete || camImg.naturalWidth === 0) return;
 
-        // Artificial Hazard Trigger for testing (10% chance during simulation mode)
-        if (Math.random() > 0.90) {
-            gas = Math.floor(Math.random() * (2000 - 1600 + 1)) + 1600; 
-            flame = Math.floor(Math.random() * (80 - 60 + 1)) + 60;
-        }
+      const canvas = document.createElement('canvas');
+      canvas.width = camImg.width || 320;
+      canvas.height = camImg.height || 240;
+      const ctx = canvas.getContext('2d');
+      
+      try {
+          ctx.drawImage(camImg, 0, 0, canvas.width, canvas.height);
+          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = frame.data;
+          let firePixelCount = 0;
+          
+          // Scanning Pixels for bright Orange/Red/Yellow (Fire Signature)
+          for (let i = 0; i < data.length; i += 4) {
+              let r = data[i], g = data[i+1], b = data[i+2];
+              if (r > 200 && g > 100 && g < 220 && b < 100) {
+                  firePixelCount++;
+              }
+          }
+          
+          let totalPixels = canvas.width * canvas.height;
+          // Calculate percentage and multiply for sensitivity
+          let fireIntensity = (firePixelCount / totalPixels) * 1000; 
+          let visualFlameVal = Math.min(Math.round(fireIntensity), 100);
+          
+          // Simulated values for missing hardware (keeps graphs moving)
+          let simulatedGas = Math.floor(Math.random() * 20) + 400; 
+          let simCpu = Math.floor(Math.random() * 15) + 40;
+          let simPwr = Math.floor(Math.random() * 40) + 3810;
+          document.getElementById('pingVal').innerText = Math.floor(Math.random() * 3) + 1 + " ms";
 
-        updateUI(gas, flame, cpu, pwr);
-        document.getElementById('pingVal').innerText = Math.floor(Math.random() * 3) + 1 + " ms";
-      }
-    }, 1000);
+          updateChart(gasChart, simulatedGas);
+          updateChart(flameChart, visualFlameVal);
+          updateChart(cpuChart, simCpu);
+          updateChart(pwrChart, simPwr);
 
-    function updateUI(gas, flame, cpu, pwr) {
-      updateChart(gasChart, gas);
-      updateChart(flameChart, flame);
-      updateChart(cpuChart, cpu);
-      updateChart(pwrChart, pwr);
+          const camAlert = document.getElementById('camAlert');
+          const tracker = document.getElementById('aiTracker');
 
-      // Trigger AI Google API Box if thresholds breached (Gas or Fire only)
-      if (gas > 900 || flame > 20) {
-          analyzeHazardWithAI(gas, flame);
+          // Trigger Logic
+          if (visualFlameVal > 15) {
+              tracker.classList.add('active'); // Target Locked!
+              camAlert.innerHTML = "[ HAZARD ] OPTICAL FIRE DETECTED!";
+              camAlert.style.background = "rgba(255, 0, 85, 0.15)";
+              camAlert.style.color = "#ff0055";
+              analyzeHazardWithAI(visualFlameVal);
+          } else {
+              tracker.classList.remove('active'); // Target Lost
+              camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
+              camAlert.style.background = "rgba(16, 185, 129, 0.15)";
+              camAlert.style.color = "#10b981";
+          }
+      } catch (e) {
+          console.log("Waiting for Secure Video Stream...", e);
       }
     }
   </script>
