@@ -140,8 +140,20 @@
       border-radius: 4px; font-size: 14px;
     }
 
+    /* AI RECOMMENDATION BOX (NEW CORNER) */
+    .ai-corner {
+      grid-column: 1 / -1; /* Dono columns cover karega */
+      background: rgba(168, 85, 247, 0.05);
+      border-top: 2px solid var(--purple);
+    }
+    .ai-text {
+      font-family: 'Courier New', monospace; font-size: 15px; color: var(--text-main); 
+      line-height: 1.6; min-height: 50px; padding: 10px; border-radius: 5px;
+      background: rgba(0,0,0,0.5); border: 1px solid #1e293b;
+    }
+
     /* Area Graphs Grid */
-    .charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+    .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     .chart-container {
       background: var(--panel-glass); backdrop-filter: blur(10px);
       border: 1px solid #1e293b; border-radius: 12px; padding: 20px; height: 320px;
@@ -181,14 +193,14 @@
         <span style="color:var(--cyan); font-weight:bold; letter-spacing:1px;" id="connState">● LINK: SIMULATING</span><br><br>
         PING RATE: <span id="pingVal" style="color:#fff;">--</span><br>
         PROTOCOL: <span style="color:#fff;">UDP/TCP MESH</span><br>
-        ENGINE: <span style="color:var(--yellow);">VORTEX-AI</span>
+        ENGINE: <span style="color:var(--yellow);">DEV-X 1.2 CORE</span>
       </div>
     </div>
 
     <!-- Content -->
     <div class="content-area">
 
-      <!-- SLIDE 1: Command & Camera -->
+      <!-- SLIDE 1: Command, Camera & AI Corner -->
       <div id="slide1" class="slide-content active">
         <div class="slide-title">/// GLOBAL COMMAND SHIELD</div>
         <div class="cmd-grid">
@@ -206,7 +218,7 @@
             </div>
           </div>
 
-          <!-- ESP32 CAMERA PANEL (Replaced Gas Block) -->
+          <!-- ESP32 CAMERA PANEL -->
           <div class="glass-panel" style="border-top-color: var(--cyan);">
             <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
             
@@ -219,10 +231,18 @@
             </div>
           </div>
 
+          <!-- NEW: DEVELOPMENT X 1.2 AI CORNER -->
+          <div class="glass-panel ai-corner">
+            <div class="panel-header" style="color: var(--purple);">>>> DEVELOPMENT X 1.2</div>
+            <div id="aiRecommendationBox" class="ai-text">
+              <span style="color: #64748b;">[ SYSTEM STANDBY ] Monitoring Fire & Gas Levels. Awaiting hazard detection to generate recommendations...</span>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- SLIDE 2: Filled Area Graphs -->
+      <!-- SLIDE 2: Fire & Gas Graphs Only -->
       <div id="slide2" class="slide-content">
         <div class="slide-title">/// SENSOR ANALYTICS MATRIX</div>
         <div class="charts-grid">
@@ -233,10 +253,6 @@
           <div class="chart-container" style="border-top-color: var(--red);">
             <div class="panel-header" style="color: var(--red);">IR FLAME HAZARD (%)</div>
             <canvas id="flameChart"></canvas>
-          </div>
-          <div class="chart-container" style="border-top-color: var(--green);">
-            <div class="panel-header" style="color: var(--green);">ULTRASONIC (cm)</div>
-            <canvas id="distChart"></canvas>
           </div>
         </div>
       </div>
@@ -288,6 +304,62 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
+    // === DEVELOPMENT X 1.2 (AI ENGINE) ===
+    const DEVX_API_KEY = "AQ.Ab8RN6KL9qPxs10O84i54y42FWqJhtqewUQiN0eQbXU3m4qMnQ"; 
+    let aiCooldown = false; 
+
+    // Offline Recommendations (Failsafe)
+    const localOfflineCommands = [
+        "Evacuate area immediately. Fire suppression systems deployed to affected zone.",
+        "High toxicity detected. Secure ventilation channels and initiate localized lockdown.",
+        "Thermal hazard confirmed. Activate emergency cooling protocols and alert ground patrol."
+    ];
+
+    async function analyzeHazardWithAI(gas, flame) {
+      if (aiCooldown) return;
+      aiCooldown = true; 
+      
+      const aiBox = document.getElementById('aiRecommendationBox');
+      aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Fire & Gas levels... Generating Emergency Recommendations...</span>";
+
+      const prompt = `CRITICAL ALERT: My security sensors detected a hazard. Gas Level: ${gas}PPM, Fire Hazard: ${flame}%. Give a strict, professional 2-sentence emergency recommendation command.`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${DEVX_API_KEY}`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); 
+
+      try {
+          const response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+              signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          const data = await response.json();
+          
+          if(data.candidates && data.candidates.length > 0) {
+              const aiResponse = data.candidates[0].content.parts[0].text;
+              aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${aiResponse}</span>`;
+              addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
+          } else {
+              throw new Error("Invalid API Response");
+          }
+          
+      } catch (error) {
+          clearTimeout(timeoutId);
+          const randomLocalCmd = localOfflineCommands[Math.floor(Math.random() * localOfflineCommands.length)];
+          aiBox.innerHTML = `<span style='color: #10b981; font-weight: bold;'>[ OFFLINE RECOMMENDATION ] <br>> ${randomLocalCmd}</span>`;
+      }
+
+      // 15 Second cooldown to prevent API spamming
+      setTimeout(() => { 
+        aiCooldown = false; 
+        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire & Gas Levels. Awaiting hazard detection to generate recommendations...</span>";
+      }, 15000);
+    }
+
     // Advanced Glowing Area Charts Builder
     function createAreaChart(ctx, colorHex, bgColor) {
       return new Chart(ctx, {
@@ -312,10 +384,8 @@
       });
     }
 
-    // Initialize 5 Area Charts
     const gasChart = createAreaChart(document.getElementById('gasChart'), '#00e5ff', 'rgba(0, 229, 255, 0.1)');
     const flameChart = createAreaChart(document.getElementById('flameChart'), '#ff0055', 'rgba(255, 0, 85, 0.1)');
-    const distChart = createAreaChart(document.getElementById('distChart'), '#10b981', 'rgba(16, 185, 129, 0.1)');
     const cpuChart = createAreaChart(document.getElementById('cpuChart'), '#fbbf24', 'rgba(251, 191, 36, 0.1)');
     const pwrChart = createAreaChart(document.getElementById('pwrChart'), '#a855f7', 'rgba(168, 85, 247, 0.1)');
 
@@ -327,12 +397,10 @@
 
     let isConnected = false;
 
-    // Connect Button Logic (Handles both Telemetry and Video Stream)
     function connectNode() {
       const ip = document.getElementById('bridgeIp').value;
       addLog(`[UPLINK] Initiating handshake with ${ip}...`);
       
-      // 1. Establish Camera Feed (Port 81)
       const camImg = document.getElementById('camStream');
       const camAlert = document.getElementById('camAlert');
       
@@ -354,7 +422,6 @@
         addLog(`<span style='color: #ff0055;'>[CAMERA] Failed to capture optical feed.</span>`);
       };
 
-      // 2. Establish Telemetry Connection
       fetch(`http://${ip}/telemetry`)
         .then(res => res.json())
         .then(data => {
@@ -372,33 +439,40 @@
         });
     }
 
-    // Auto-Fluctuation & Real Data Engine
     setInterval(() => {
       if (isConnected) {
         const ip = document.getElementById('bridgeIp').value;
         fetch(`http://${ip}/telemetry`)
           .then(res => res.json())
-          .then(data => { updateUI(data.gas, data.flame, data.distance, 45, 3800); })
+          .then(data => { updateUI(data.gas, data.flame, 45, 3800); })
           .catch(() => { isConnected = false; });
       } else {
-        // High-Tech Simulation Algorithm
         let gas = Math.floor(Math.random() * (480 - 410 + 1)) + 410;
         let flame = Math.floor(Math.random() * 5);
-        let dist = Math.floor(Math.random() * (165 - 145 + 1)) + 145;
         let cpu = Math.floor(Math.random() * (55 - 40 + 1)) + 40;
         let pwr = Math.floor(Math.random() * (3850 - 3810 + 1)) + 3810;
 
-        updateUI(gas, flame, dist, cpu, pwr);
+        // Artificial Hazard Trigger for testing (10% chance during simulation mode)
+        if (Math.random() > 0.90) {
+            gas = Math.floor(Math.random() * (2000 - 1600 + 1)) + 1600; 
+            flame = Math.floor(Math.random() * (80 - 60 + 1)) + 60;
+        }
+
+        updateUI(gas, flame, cpu, pwr);
         document.getElementById('pingVal').innerText = Math.floor(Math.random() * 3) + 1 + " ms";
       }
     }, 1000);
 
-    function updateUI(gas, flame, dist, cpu, pwr) {
+    function updateUI(gas, flame, cpu, pwr) {
       updateChart(gasChart, gas);
       updateChart(flameChart, flame);
-      updateChart(distChart, dist);
       updateChart(cpuChart, cpu);
       updateChart(pwrChart, pwr);
+
+      // Trigger AI Google API Box if thresholds breached (Gas or Fire only)
+      if (gas > 900 || flame > 20) {
+          analyzeHazardWithAI(gas, flame);
+      }
     }
   </script>
 </body>
