@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include "esp_http_server.h"
 
-// Yahan bhi same WiFi details dalein
+// Apna WiFi details dalein
 const char* ssid = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
@@ -33,6 +33,9 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   char * part_buf[64];
 
   res = httpd_resp_set_type(req, "multipart/x-mixed-replace;boundary=123456789000000000000987654321");
+  // YEH LINE BOHOT ZAROORI HAI WEBSITE AI KE LIYE
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*"); 
+  
   if(res != ESP_OK) return res;
 
   while(true) {
@@ -95,13 +98,9 @@ void setup() {
   if (err != ESP_OK) return;
 
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
+  while (WiFi.status() != WL_CONNECTED) delay(500);
   
   startCameraServer();
 }
 
-void loop() {
-  delay(10000); 
-}
+void loop() { delay(10000); }
