@@ -109,7 +109,7 @@
     }
     .console-input input {
       flex: 1; background: transparent; border: none; color: var(--cyan);
-      padding: 15px 20px; font-family: 'Orbitron', monospace; font-size: 16px; outline: none;
+      padding: 15px 20px; font-family: 'Orbitron', monospace; font-size: 16px; outline: none; text-align: center;
     }
     .console-input button {
       background: var(--cyan); color: #000; border: none; padding: 0 30px;
@@ -124,20 +124,20 @@
     }
     .trigger-btn:hover { background: var(--red); color: #fff; box-shadow: 0 0 30px rgba(255,0,85,0.6); transform: scale(1.02); }
 
-    /* Glowing HUD Display for Gas */
-    .hud-display {
-      text-align: center; padding: 40px 0;
+    /* CAMERA BOX DESIGN */
+    .cam-container {
+      width: 100%; height: 260px; background: rgba(0,0,0,0.8);
+      border: 1px solid var(--border-neon); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.1);
     }
-    .hud-value {
-      font-family: 'Orbitron', monospace; font-size: 90px; font-weight: 900; color: var(--cyan);
-      text-shadow: 0 0 30px var(--cyan-glow), 0 0 60px rgba(0,229,255,0.2); line-height: 1;
+    .cam-container img {
+      width: 100%; height: 100%; object-fit: cover;
     }
-    .hud-label {
-      font-size: 16px; font-weight: 700; color: var(--text-muted); letter-spacing: 4px; margin-top: 10px;
-    }
-    .hud-alert {
-      margin-top: 30px; display: inline-block; padding: 12px 30px; font-family: 'Orbitron', sans-serif;
-      font-weight: 900; letter-spacing: 2px; border-radius: 4px; font-size: 14px;
+    .cam-alert {
+      margin-top: 20px; display: block; width: 100%; text-align: center; padding: 12px;
+      font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px;
+      border-radius: 4px; font-size: 14px;
     }
 
     /* Area Graphs Grid */
@@ -188,11 +188,12 @@
     <!-- Content -->
     <div class="content-area">
 
-      <!-- SLIDE 1: Command & HUD -->
+      <!-- SLIDE 1: Command & Camera -->
       <div id="slide1" class="slide-content active">
         <div class="slide-title">/// GLOBAL COMMAND SHIELD</div>
         <div class="cmd-grid">
           
+          <!-- OVERRIDE & CONNECT PANEL -->
           <div class="glass-panel">
             <div class="panel-header">>>> HARDWARE OVERRIDE</div>
             <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 25px;">Force-trigger global perimeter alert. Bypasses all local AI nodes and alerts main grid.</p>
@@ -205,12 +206,16 @@
             </div>
           </div>
 
-          <div class="glass-panel" style="border-top-color: var(--green);">
-            <div class="panel-header" style="color: var(--green);">>>> PRIMARY GAS TELEMETRY (MQ)</div>
-            <div class="hud-display">
-              <div class="hud-value" id="slide1Gas">--</div>
-              <div class="hud-label">PARTS PER MILLION (PPM)</div>
-              <div id="slide1Alert" class="hud-alert" style="background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid var(--green);">[ SECURE ] LIVE SCANNING</div>
+          <!-- ESP32 CAMERA PANEL (Replaced Gas Block) -->
+          <div class="glass-panel" style="border-top-color: var(--cyan);">
+            <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
+            
+            <div class="cam-container">
+              <img id="camStream" src="" alt="[ CAMERA FEED OFFLINE - WAITING FOR UPLINK ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
+            </div>
+
+            <div id="camAlert" class="cam-alert" style="background: rgba(0, 229, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan);">
+              [ STANDBY ] AWAITING SIGNAL
             </div>
           </div>
 
@@ -300,14 +305,14 @@
           responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false }, tooltip: { enabled: false } },
           scales: {
-            x: { display: false }, // Hide grid for cleaner HUD look
+            x: { display: false }, 
             y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#64748b' } }
           }
         }
       });
     }
 
-    // Initialize 5 Area Charts with glow colors
+    // Initialize 5 Area Charts
     const gasChart = createAreaChart(document.getElementById('gasChart'), '#00e5ff', 'rgba(0, 229, 255, 0.1)');
     const flameChart = createAreaChart(document.getElementById('flameChart'), '#ff0055', 'rgba(255, 0, 85, 0.1)');
     const distChart = createAreaChart(document.getElementById('distChart'), '#10b981', 'rgba(16, 185, 129, 0.1)');
@@ -322,10 +327,34 @@
 
     let isConnected = false;
 
+    // Connect Button Logic (Handles both Telemetry and Video Stream)
     function connectNode() {
       const ip = document.getElementById('bridgeIp').value;
       addLog(`[UPLINK] Initiating handshake with ${ip}...`);
       
+      // 1. Establish Camera Feed (Port 81)
+      const camImg = document.getElementById('camStream');
+      const camAlert = document.getElementById('camAlert');
+      
+      camImg.src = `http://${ip}:81/stream`;
+      
+      camImg.onload = function() {
+        camAlert.innerHTML = "[ ACTIVE ] OPTICAL FEED STREAMING";
+        camAlert.style.background = "rgba(16, 185, 129, 0.15)";
+        camAlert.style.color = "#10b981";
+        camAlert.style.borderColor = "#10b981";
+        addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced successfully.</span>`);
+      };
+
+      camImg.onerror = function() {
+        camAlert.innerHTML = "[ ERROR ] CAMERA FEED OFFLINE";
+        camAlert.style.background = "rgba(255, 0, 85, 0.15)";
+        camAlert.style.color = "#ff0055";
+        camAlert.style.borderColor = "#ff0055";
+        addLog(`<span style='color: #ff0055;'>[CAMERA] Failed to capture optical feed.</span>`);
+      };
+
+      // 2. Establish Telemetry Connection
       fetch(`http://${ip}/telemetry`)
         .then(res => res.json())
         .then(data => {
@@ -339,11 +368,11 @@
         })
         .catch(err => {
           isConnected = false;
-          addLog(`<span style='color: #fbbf24;'>[UPLINK] Failed. Reverting to SIMULATION.</span>`);
+          addLog(`<span style='color: #fbbf24;'>[UPLINK] Telemetry Failed. Reverting to SIMULATION.</span>`);
         });
     }
 
-    // The Engine (Auto-Fluctuation & Real Data)
+    // Auto-Fluctuation & Real Data Engine
     setInterval(() => {
       if (isConnected) {
         const ip = document.getElementById('bridgeIp').value;
@@ -365,8 +394,6 @@
     }, 1000);
 
     function updateUI(gas, flame, dist, cpu, pwr) {
-      document.getElementById('slide1Gas').innerText = gas;
-      
       updateChart(gasChart, gas);
       updateChart(flameChart, flame);
       updateChart(distChart, dist);
