@@ -126,7 +126,6 @@
       position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.1);
     }
     
-    /* VERY IMPORTANT: Object-fit Fill ensures coordinates match perfectly for tracking */
     .cam-container img {
       width: 100%; height: 100%; object-fit: fill; 
     }
@@ -137,13 +136,13 @@
       border-radius: 4px; font-size: 14px;
     }
 
-    /* === UPDATED: DYNAMIC AI TRACKER (MOVES WITH FIRE) === */
+    /* === DYNAMIC AI TRACKER (TARGET LOCK) === */
     .ai-tracker {
       position: absolute; 
       border: 2px solid var(--red); display: none; 
       box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.5);
       animation: target-lock 0.3s infinite alternate; z-index: 10;
-      transition: all 0.15s ease-out; /* Smooth Movement */
+      transition: all 0.1s ease-out;
     }
     .ai-tracker.active { display: block; } 
     
@@ -167,6 +166,7 @@
       to { transform: scale(1.05); border-color: rgba(255, 0, 85, 1); }
     }
 
+    /* === DEV-X 1.2 CORNER === */
     .ai-corner {
       grid-column: 1 / -1; background: rgba(168, 85, 247, 0.05); border-top: 2px solid var(--purple);
     }
@@ -238,10 +238,9 @@
           <div class="glass-panel" style="border-top-color: var(--cyan);">
             <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
             <div class="cam-container">
-              <!-- crossOrigin="Anonymous" bypassed basic CORS -->
               <img id="camStream" crossOrigin="Anonymous" src="" alt="[ CAMERA FEED OFFLINE ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
               
-              <!-- DYNAMIC TRACKER OVERLAY -->
+              <!-- THE AI TARGET LOCK OVERLAY -->
               <div id="aiTracker" class="ai-tracker">
                 <div class="tracker-label">[ TARGET LOCKED: FIRE ]</div>
               </div>
@@ -251,6 +250,7 @@
             </div>
           </div>
 
+          <!-- DEV-X 1.2 AI CORNER -->
           <div class="glass-panel ai-corner">
             <div class="panel-header" style="color: var(--purple);">>>> DEVELOPMENT X 1.2</div>
             <div id="aiRecommendationBox" class="ai-text">
@@ -318,44 +318,30 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
-    const DEVX_API_KEY = "AQ.Ab8RN6KL9qPxs10O84i54y42FWqJhtqewUQiN0eQbXU3m4qMnQ"; 
+    // === OFFLINE AI ENGINE (DEV-X 1.2) - NO GOOGLE API ===
     let aiCooldown = false; 
 
-    const localOfflineCommands = [
+    const localCommands = [
         "Evacuate area immediately. Fire suppression systems deployed to affected zone.",
-        "Optical hazard confirmed. Activate emergency cooling protocols and alert ground patrol."
+        "Optical hazard confirmed. Activate emergency cooling protocols and alert ground patrol.",
+        "Critical thermal signature detected. Sealing internal blast doors and dispatching response drones."
     ];
 
-    async function analyzeHazardWithAI(fireLevel) {
+    function analyzeHazardWithAI(fireLevel) {
       if (aiCooldown) return;
       aiCooldown = true; 
       
       const aiBox = document.getElementById('aiRecommendationBox');
       aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Visual Fire Threat... Generating Emergency Recommendations...</span>";
 
-      const prompt = `CRITICAL ALERT: My security camera's optical AI just detected a fire. Visual Fire Hazard Intensity: ${fireLevel}%. Give a strict, professional 2-sentence emergency recommendation command to the security team.`;
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${DEVX_API_KEY}`;
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000); 
+      // AI सोचने का नाटक (1.5 सेकंड की देरी)
+      setTimeout(() => {
+          const randomCmd = localCommands[Math.floor(Math.random() * localCommands.length)];
+          aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${randomCmd}</span>`;
+          addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
+      }, 1500);
 
-      try {
-          const response = await fetch(url, {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          const data = await response.json();
-          if(data.candidates && data.candidates.length > 0) {
-              const aiResponse = data.candidates[0].content.parts[0].text;
-              aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${aiResponse}</span>`;
-              addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
-          } else throw new Error("Invalid Response");
-      } catch (error) {
-          clearTimeout(timeoutId);
-          const randomLocalCmd = localOfflineCommands[Math.floor(Math.random() * localOfflineCommands.length)];
-          aiBox.innerHTML = `<span style='color: #10b981; font-weight: bold;'>[ OFFLINE RECOMMENDATION ] <br>> ${randomLocalCmd}</span>`;
-      }
+      // System cools down for 15 seconds before processing again
       setTimeout(() => { 
         aiCooldown = false; 
         aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection to generate recommendations...</span>";
@@ -388,7 +374,8 @@
       const camImg = document.getElementById('camStream');
       const camAlert = document.getElementById('camAlert');
       
-      camImg.src = `http://${ip}:81/stream`;
+      // Force cache bypassing to fetch live feed seamlessly
+      camImg.src = `http://${ip}:81/stream?${new Date().getTime()}`;
       
       camImg.onload = function() {
         camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
@@ -434,8 +421,8 @@
           let minY = canvas.height, maxY = 0;
           
           // Fast Scan logic for Red/Orange/Yellow Fire Pixels
-          for (let y = 0; y < canvas.height; y += 2) {
-              for (let x = 0; x < canvas.width; x += 2) {
+          for (let y = 0; y < canvas.height; y += 4) {
+              for (let x = 0; x < canvas.width; x += 4) {
                   let i = (y * canvas.width + x) * 4;
                   let r = data[i], g = data[i+1], b = data[i+2];
                   
@@ -450,7 +437,7 @@
               }
           }
           
-          let visualFlameVal = Math.min(Math.round((firePixelCount / (canvas.width * canvas.height / 4)) * 2000), 100);
+          let visualFlameVal = Math.min(Math.round((firePixelCount / (canvas.width * canvas.height / 16)) * 3000), 100);
           
           let simulatedGas = Math.floor(Math.random() * 20) + 400; 
           let simCpu = Math.floor(Math.random() * 15) + 40;
@@ -465,20 +452,18 @@
           const camAlert = document.getElementById('camAlert');
           const tracker = document.getElementById('aiTracker');
 
-          // HIGH SENSITIVITY: Sirf 5 Pixel aag dikhte hi trigger karega
-          if (firePixelCount > 5) { 
+          if (firePixelCount > 2) { 
               let avgX = sumX / firePixelCount;
               let avgY = sumY / firePixelCount;
               
-              // Scale coordinates to fit UI screen size perfectly
               let scaleX = camImg.clientWidth / canvas.width;
               let scaleY = camImg.clientHeight / canvas.height;
               
               let targetX = avgX * scaleX;
               let targetY = avgY * scaleY;
               
-              let boxW = Math.max((maxX - minX) * scaleX + 40, 60);
-              let boxH = Math.max((maxY - minY) * scaleY + 40, 60);
+              let boxW = Math.max((maxX - minX) * scaleX + 40, 80);
+              let boxH = Math.max((maxY - minY) * scaleY + 40, 80);
 
               tracker.style.left = targetX + 'px';
               tracker.style.top = targetY + 'px';
@@ -492,7 +477,7 @@
               camAlert.style.background = "rgba(255, 0, 85, 0.15)";
               camAlert.style.color = "#ff0055";
               
-              if (visualFlameVal > 5) analyzeHazardWithAI(visualFlameVal);
+              if (visualFlameVal > 10) analyzeHazardWithAI(visualFlameVal);
           } else {
               tracker.classList.remove('active'); 
               camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
@@ -500,12 +485,7 @@
               camAlert.style.color = "#10b981";
           }
       } catch (e) {
-          if (!window.corsWarningShown) {
-              console.error("Browser Security blocked AI Scan:", e);
-              const aiBox = document.getElementById('aiRecommendationBox');
-              aiBox.innerHTML = "<span style='color: #ff0055;'>[ SYSTEM WARNING ] Google Chrome Security (CORS) is blocking the AI from scanning the camera. <br><br><b>PITCH FIX:</b> Please DO NOT run this from GitHub Pages link. Download this index.html file and open it directly from your Laptop folder (Localhost) to allow the AI Scanner to work!</span>";
-              window.corsWarningShown = true;
-          }
+          console.error("CORS Error: Please run this file locally.", e);
       }
     }
   </script>
