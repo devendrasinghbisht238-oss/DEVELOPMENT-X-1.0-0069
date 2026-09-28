@@ -136,15 +136,15 @@
       border-radius: 4px; font-size: 14px;
     }
 
-    /* === DYNAMIC AI TRACKER (TARGET LOCK) === */
+    /* === SUPER RESPONSIVE AI TRACKER === */
     .ai-tracker {
       position: absolute; 
-      border: 2px solid var(--red); display: none; 
+      border: 2px solid var(--red); 
+      display: none; /* Default Hidden */
       box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.5);
       animation: target-lock 0.3s infinite alternate; z-index: 10;
-      transition: all 0.1s ease-out;
+      transition: all 0.1s linear; /* Smooth target movement */
     }
-    .ai-tracker.active { display: block; } 
     
     .ai-tracker::before {
       content: ''; position: absolute; top: -20px; bottom: -20px; left: 50%; width: 2px;
@@ -318,7 +318,7 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
-    // === OFFLINE AI ENGINE (DEV-X 1.2) - NO GOOGLE API ===
+    // === OFFLINE AI ENGINE (DEV-X 1.2) ===
     let aiCooldown = false; 
 
     const localCommands = [
@@ -334,18 +334,18 @@
       const aiBox = document.getElementById('aiRecommendationBox');
       aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Visual Fire Threat... Generating Emergency Recommendations...</span>";
 
-      // AI सोचने का नाटक (1.5 सेकंड की देरी)
+      // 1.5 Second delay to simulate AI thinking
       setTimeout(() => {
           const randomCmd = localCommands[Math.floor(Math.random() * localCommands.length)];
           aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${randomCmd}</span>`;
           addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
       }, 1500);
 
-      // System cools down for 15 seconds before processing again
+      // REDUCED COOLDOWN: Sirf 5 second baad AI dobara scan karne lagega
       setTimeout(() => { 
         aiCooldown = false; 
-        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection to generate recommendations...</span>";
-      }, 15000);
+        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection...</span>";
+      }, 5000);
     }
 
     function createAreaChart(ctx, colorHex, bgColor) {
@@ -366,6 +366,10 @@
     }
 
     let opticalScannerInterval;
+    
+    // MEMORY FIX: Canvas ek hi baar banega
+    const scanCanvas = document.createElement('canvas');
+    const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
 
     function connectNode() {
       const ip = document.getElementById('bridgeIp').value;
@@ -374,8 +378,7 @@
       const camImg = document.getElementById('camStream');
       const camAlert = document.getElementById('camAlert');
       
-      // Force cache bypassing to fetch live feed seamlessly
-      camImg.src = `http://${ip}:81/stream?${new Date().getTime()}`;
+      camImg.src = `http://${ip}:81/stream`;
       
       camImg.onload = function() {
         camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
@@ -388,6 +391,7 @@
         addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Computer Vision Engine Started.</span>`);
         
         clearInterval(opticalScannerInterval);
+        // Har 0.5 sec mein check karega
         opticalScannerInterval = setInterval(processOpticalVision, 500); 
       };
 
@@ -400,33 +404,32 @@
       };
     }
 
-    // === THE DYNAMIC TARGET LOCK ENGINE ===
+    // === THE DYNAMIC TARGET LOCK ENGINE (MEMORY OPTIMIZED) ===
     function processOpticalVision() {
       const camImg = document.getElementById('camStream');
       if (!camImg.complete || camImg.naturalWidth === 0) return;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = camImg.naturalWidth;
-      canvas.height = camImg.naturalHeight;
-      const ctx = canvas.getContext('2d');
+      scanCanvas.width = camImg.naturalWidth;
+      scanCanvas.height = camImg.naturalHeight;
       
       try {
-          ctx.drawImage(camImg, 0, 0, canvas.width, canvas.height);
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          scanCtx.drawImage(camImg, 0, 0, scanCanvas.width, scanCanvas.height);
+          const frame = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
           const data = frame.data;
           
           let firePixelCount = 0;
           let sumX = 0, sumY = 0;
-          let minX = canvas.width, maxX = 0;
-          let minY = canvas.height, maxY = 0;
+          let minX = scanCanvas.width, maxX = 0;
+          let minY = scanCanvas.height, maxY = 0;
           
-          // Fast Scan logic for Red/Orange/Yellow Fire Pixels
-          for (let y = 0; y < canvas.height; y += 4) {
-              for (let x = 0; x < canvas.width; x += 4) {
-                  let i = (y * canvas.width + x) * 4;
+          // Scanning Pixels
+          for (let y = 0; y < scanCanvas.height; y += 4) {
+              for (let x = 0; x < scanCanvas.width; x += 4) {
+                  let i = (y * scanCanvas.width + x) * 4;
                   let r = data[i], g = data[i+1], b = data[i+2];
                   
-                  if (r > 200 && g > 100 && b < 150) {
+                  // Fire detection logic
+                  if (r > 200 && g > 80 && g < 220 && b < 100) {
                       firePixelCount++;
                       sumX += x; sumY += y;
                       if (x < minX) minX = x;
@@ -437,7 +440,7 @@
               }
           }
           
-          let visualFlameVal = Math.min(Math.round((firePixelCount / (canvas.width * canvas.height / 16)) * 3000), 100);
+          let visualFlameVal = Math.min(Math.round((firePixelCount / (scanCanvas.width * scanCanvas.height / 16)) * 4000), 100);
           
           let simulatedGas = Math.floor(Math.random() * 20) + 400; 
           let simCpu = Math.floor(Math.random() * 15) + 40;
@@ -452,12 +455,13 @@
           const camAlert = document.getElementById('camAlert');
           const tracker = document.getElementById('aiTracker');
 
+          // VISUAL TRACKER LOGIC
           if (firePixelCount > 2) { 
               let avgX = sumX / firePixelCount;
               let avgY = sumY / firePixelCount;
               
-              let scaleX = camImg.clientWidth / canvas.width;
-              let scaleY = camImg.clientHeight / canvas.height;
+              let scaleX = camImg.clientWidth / scanCanvas.width;
+              let scaleY = camImg.clientHeight / scanCanvas.height;
               
               let targetX = avgX * scaleX;
               let targetY = avgY * scaleY;
@@ -472,20 +476,24 @@
               tracker.style.marginLeft = -(boxW/2) + 'px';
               tracker.style.marginTop = -(boxH/2) + 'px';
               
-              tracker.classList.add('active'); 
+              // Force show tracker
+              tracker.style.display = 'block'; 
+              
               camAlert.innerHTML = "[ HAZARD ] OPTICAL FIRE DETECTED!";
               camAlert.style.background = "rgba(255, 0, 85, 0.15)";
               camAlert.style.color = "#ff0055";
               
               if (visualFlameVal > 10) analyzeHazardWithAI(visualFlameVal);
           } else {
-              tracker.classList.remove('active'); 
+              // Force hide tracker when fire goes away
+              tracker.style.display = 'none'; 
+              
               camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
               camAlert.style.background = "rgba(16, 185, 129, 0.15)";
               camAlert.style.color = "#10b981";
           }
       } catch (e) {
-          console.error("CORS Error: Please run this file locally.", e);
+          console.error(e);
       }
     }
   </script>
