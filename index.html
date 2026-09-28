@@ -319,6 +319,7 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
+    // === OFFLINE AI ENGINE (DEV-X 1.2) ===
     let aiCooldown = false; 
 
     const localCommands = [
@@ -387,6 +388,7 @@
         addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Computer Vision Engine Started.</span>`);
         
         clearInterval(opticalScannerInterval);
+        // Scans rapidly every 250ms
         opticalScannerInterval = setInterval(processOpticalVision, 250); 
       };
 
@@ -417,7 +419,7 @@
           let minX = scanCanvas.width, maxX = 0;
           let minY = scanCanvas.height, maxY = 0;
           
-          // Har 2nd pixel scan karega (Pehle se 2x zyada accurate)
+          // Ultra-High Precision: Har 2nd pixel scan karega
           for (let y = 0; y < scanCanvas.height; y += 2) {
               for (let x = 0; x < scanCanvas.width; x += 2) {
                   let i = (y * scanCanvas.width + x) * 4;
