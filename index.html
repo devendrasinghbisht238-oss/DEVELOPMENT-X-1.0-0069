@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DEVELOPMENTX 1.0 - MULTI-HAZARD SHIELD</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
 
@@ -95,7 +97,26 @@
     
     .panel-header {
       font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900;
-      color: var(--cyan); letter-spacing: 2px; margin-bottom: 15px; display: flex; justify-content: space-between;
+      color: var(--cyan); letter-spacing: 2px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .flash-btn {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .flash-btn.active {
+      background: var(--yellow);
+      color: #000;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
     }
     
     .console-input {
@@ -140,10 +161,10 @@
     .ai-tracker {
       position: absolute; 
       border: 2px solid var(--red); 
-      display: none; /* Initially Hidden */
+      display: none;
       box-shadow: 0 0 15px rgba(255, 0, 85, 0.8), inset 0 0 15px rgba(255, 0, 85, 0.5);
       animation: target-lock 0.2s infinite alternate; z-index: 10;
-      transition: all 0.05s linear; /* Ultra Fast Movement */
+      transition: all 0.05s linear;
       pointer-events: none;
     }
     
@@ -159,6 +180,22 @@
     .tracker-label {
       position: absolute; top: -30px; left: -15px; color: #fff; background: var(--red);
       padding: 3px 8px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    /* Entity Tracker for Animal & Human */
+    .entity-tracker {
+      position: absolute;
+      border: 2px solid var(--yellow);
+      display: none;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
+      z-index: 9;
+      transition: all 0.08s linear;
+      pointer-events: none;
+    }
+    .entity-label {
+      position: absolute; top: -24px; left: -2px; color: #000; background: var(--yellow);
+      padding: 2px 7px; font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900; letter-spacing: 1px;
       white-space: nowrap;
     }
 
@@ -237,13 +274,21 @@
           </div>
 
           <div class="glass-panel" style="border-top-color: var(--cyan);">
-            <div class="panel-header" style="color: var(--cyan);">>>> ESP32-CAM LIVE VISION</div>
+            <div class="panel-header" style="color: var(--cyan);">
+              <span>>>> ESP32-CAM LIVE VISION</span>
+              <button id="flashBtn" class="flash-btn" onclick="toggleFlash()">[ FLASH: OFF ]</button>
+            </div>
             <div class="cam-container">
               <img id="camStream" crossOrigin="Anonymous" src="" alt="[ CAMERA FEED OFFLINE ]" style="color: #64748b; font-family: 'Orbitron', monospace; font-size: 12px; text-align: center; line-height: 260px;">
               
-              <!-- THE AI TARGET LOCK OVERLAY -->
+              <!-- FIRE TARGET LOCK OVERLAY -->
               <div id="aiTracker" class="ai-tracker">
                 <div class="tracker-label">[ TARGET LOCKED: FIRE ]</div>
+              </div>
+
+              <!-- ANIMAL / HUMAN TARGET LOCK OVERLAY -->
+              <div id="entityTracker" class="entity-tracker">
+                <div id="entityLabel" class="entity-label">[ ENTITY ]</div>
               </div>
             </div>
             <div id="camAlert" class="cam-alert" style="background: rgba(0, 229, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan);">
@@ -255,7 +300,7 @@
           <div class="glass-panel ai-corner">
             <div class="panel-header" style="color: var(--purple);">>>> DEVELOPMENT X 1.2</div>
             <div id="aiRecommendationBox" class="ai-text">
-              <span style="color: #64748b;">[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection to generate recommendations...</span>
+              <span style="color: #64748b;">[ SYSTEM STANDBY ] Multi-Hazard Neural Engine (Fire + Wildlife + Human) initializing...</span>
             </div>
           </div>
         </div>
@@ -319,32 +364,76 @@
       alert("EMERGENCY PROTOCOL ENGAGED");
     }
 
-    // === OFFLINE AI ENGINE (DEV-X 1.2) ===
-    let aiCooldown = false; 
+    // === ESP32-CAM FLASH LED CONTROL (GPIO 4) ===
+    let flashState = false;
+    async function toggleFlash() {
+      const ip = document.getElementById('bridgeIp').value.trim();
+      const btn = document.getElementById('flashBtn');
+      flashState = !flashState;
+      const pwmVal = flashState ? 255 : 0;
 
-    const localCommands = [
+      btn.innerText = flashState ? "[ FLASH: ON ]" : "[ FLASH: OFF ]";
+      btn.classList.toggle('active', flashState);
+
+      if (!ip) return;
+      const endpoints = [
+        `http://${ip}/control?var=led_intensity&val=${pwmVal}`,
+        `http://${ip}/flash?state=${flashState ? 1 : 0}`
+      ];
+      for (const url of endpoints) {
+        try { await fetch(url, { mode: 'no-cors' }); } catch (e) {}
+      }
+      addLog(`<span style='color: #fbbf24;'>[HARDWARE] ESP32-CAM Flash LED set to ${flashState ? 'ON (GPIO 4)' : 'OFF'}.</span>`);
+    }
+
+    // === MULTI-HAZARD AI ENGINE (DEV-X 1.2) ===
+    let aiCooldown = false;
+    let cocoModel = null;
+    const ANIMAL_LIST = new Set(['bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe']);
+
+    (async function loadNeuralCore() {
+      try {
+        cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+        document.getElementById('aiRecommendationBox').innerHTML =
+          "<span style='color: #10b981;'>[ NEURAL CORE ONLINE ] Anti-Bulb Fire Filter + Wildlife &amp; Human Classifier active.</span>";
+        addLog("<span style='color: #10b981;'>[AI_CORE] COCO-SSD Multi-Hazard Neural Engine loaded.</span>");
+      } catch (err) {
+        document.getElementById('aiRecommendationBox').innerHTML =
+          "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Anti-Bulb Optical Fire Filter active.</span>";
+      }
+    })();
+
+    const hazardCommands = {
+      FIRE: [
         "Evacuate area immediately. Fire suppression systems deployed to affected zone.",
-        "Optical hazard confirmed. Activate emergency cooling protocols and alert ground patrol.",
-        "Critical thermal signature detected. Sealing internal blast doors and dispatching response drones."
-    ];
+        "Optical flame flicker confirmed. Activate emergency cooling protocols and alert forestry patrol."
+      ],
+      WILDLIFE: [
+        "Wild animal perimeter breach detected. Triggering acoustic deterrent & alerting forest patrol.",
+        "Wildlife movement locked on camera. Keep human personnel clear of perimeter sector."
+      ],
+      HUMAN: [
+        "Human presence verified on perimeter feed. Logging identification & maintaining safe watch.",
+        "Non-wildlife human signature detected. Suppressing animal alarm; monitoring movement."
+      ]
+    };
 
-    function analyzeHazardWithAI() {
+    function analyzeHazardWithAI(hazardType, detailText) {
       if (aiCooldown) return;
-      aiCooldown = true; 
+      aiCooldown = true;
       
       const aiBox = document.getElementById('aiRecommendationBox');
-      aiBox.innerHTML = "<span style='color: #00e5ff;'>[ DEVELOPMENT X 1.2 ] Analyzing Visual Fire Threat... Generating Emergency Recommendations...</span>";
+      const list = hazardCommands[hazardType] || hazardCommands.FIRE;
+      const cmd = list[Math.floor(Math.random() * list.length)];
+      const tagColor = hazardType === 'FIRE' ? '#ff0055' : (hazardType === 'WILDLIFE' ? '#fbbf24' : '#10b981');
 
-      setTimeout(() => {
-          const randomCmd = localCommands[Math.floor(Math.random() * localCommands.length)];
-          aiBox.innerHTML = `<span style='color: #fbbf24; font-weight: bold;'>[ RECOMMENDATION ISSUED ] <br>> ${randomCmd}</span>`;
-          addLog(`<span style='color: #fbbf24;'>[DEV-X 1.2] Recommendation logged.</span>`);
-      }, 1000);
+      aiBox.innerHTML = `<span style='color: ${tagColor}; font-weight: bold;'>[ ${hazardType} DETECTED: ${detailText} ] <br>> ${cmd}</span>`;
+      addLog(`<span style='color: ${tagColor};'>[DEV-X 1.2] ${hazardType} (${detailText}) logged.</span>`);
 
       setTimeout(() => { 
         aiCooldown = false; 
-        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire Levels visually. Awaiting hazard detection...</span>";
-      }, 5000); // 5 seconds timer
+        aiBox.innerHTML = "<span style='color: #64748b;'>[ SYSTEM STANDBY ] Monitoring Fire, Wildlife &amp; Human signatures visually...</span>";
+      }, 4500);
     }
 
     function createAreaChart(ctx, colorHex, bgColor) {
@@ -365,11 +454,16 @@
     }
 
     let opticalScannerInterval;
+    let entityScannerInterval;
     const scanCanvas = document.createElement('canvas');
     const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
 
+    // Temporal memory to reject static bulbs
+    let prevLumaMap = null;
+    let fireStreak = 0;
+
     function connectNode() {
-      const ip = document.getElementById('bridgeIp').value;
+      const ip = document.getElementById('bridgeIp').value.trim();
       addLog(`[UPLINK] Connecting Optical Scanner to ${ip}...`);
       
       const camImg = document.getElementById('camStream');
@@ -385,11 +479,12 @@
         document.getElementById('globalStatus').style.color = "#10b981";
         document.getElementById('connState').innerText = "● LINK: ESTABLISHED";
         document.getElementById('connState').style.color = "#10b981";
-        addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Computer Vision Engine Started.</span>`);
+        addLog(`<span style='color: #10b981;'>[CAMERA] Optical feed synced. Hybrid AI Vision Started.</span>`);
         
         clearInterval(opticalScannerInterval);
-        // Scans rapidly every 250ms
-        opticalScannerInterval = setInterval(processOpticalVision, 250); 
+        clearInterval(entityScannerInterval);
+        opticalScannerInterval = setInterval(processOpticalVision, 220);
+        entityScannerInterval = setInterval(processEntityVision, 650);
       };
 
       camImg.onerror = function() {
@@ -398,46 +493,138 @@
         camAlert.style.color = "#ff0055";
         addLog(`<span style='color: #ff0055;'>[CAMERA] Failed to capture optical feed.</span>`);
         clearInterval(opticalScannerInterval);
+        clearInterval(entityScannerInterval);
       };
     }
 
-    // === HIGH PRECISION TARGET LOCK ENGINE ===
+    // === ANIMAL vs HUMAN CLASSIFIER (COCO-SSD) ===
+    let latestEntity = null; // { type: 'WILDLIFE' | 'HUMAN', label: string, score: number }
+    async function processEntityVision() {
+      const camImg = document.getElementById('camStream');
+      const entityTracker = document.getElementById('entityTracker');
+      const entityLabel = document.getElementById('entityLabel');
+
+      if (!cocoModel || !camImg.complete || camImg.naturalWidth === 0) return;
+
+      try {
+        const predictions = await cocoModel.detect(camImg);
+        let bestAnimal = null;
+        let bestHuman = null;
+
+        for (const p of predictions) {
+          if (p.score < 0.48) continue;
+          if (ANIMAL_LIST.has(p.class) && (!bestAnimal || p.score > bestAnimal.score)) {
+            bestAnimal = p;
+          } else if (p.class === 'person' && (!bestHuman || p.score > bestHuman.score)) {
+            bestHuman = p;
+          }
+        }
+
+        const scaleX = camImg.clientWidth / camImg.naturalWidth;
+        const scaleY = camImg.clientHeight / camImg.naturalHeight;
+
+        if (bestAnimal) {
+          const [bx, by, bw, bh] = bestAnimal.bbox;
+          const conf = Math.round(bestAnimal.score * 100);
+          const name = bestAnimal.class.toUpperCase();
+          latestEntity = { type: 'WILDLIFE', label: `${name} (${conf}%)` };
+
+          entityTracker.style.left = (bx * scaleX) + 'px';
+          entityTracker.style.top = (by * scaleY) + 'px';
+          entityTracker.style.width = (bw * scaleX) + 'px';
+          entityTracker.style.height = (bh * scaleY) + 'px';
+          entityTracker.style.borderColor = '#fbbf24';
+          entityTracker.style.boxShadow = '0 0 12px rgba(251, 191, 36, 0.8)';
+          entityLabel.style.background = '#fbbf24';
+          entityLabel.style.color = '#000';
+          entityLabel.innerText = `[ ANIMAL: ${name} ${conf}% ]`;
+          entityTracker.style.display = 'block';
+        } else if (bestHuman) {
+          const [bx, by, bw, bh] = bestHuman.bbox;
+          const conf = Math.round(bestHuman.score * 100);
+          latestEntity = { type: 'HUMAN', label: `HUMAN (${conf}%)` };
+
+          entityTracker.style.left = (bx * scaleX) + 'px';
+          entityTracker.style.top = (by * scaleY) + 'px';
+          entityTracker.style.width = (bw * scaleX) + 'px';
+          entityTracker.style.height = (bh * scaleY) + 'px';
+          entityTracker.style.borderColor = '#10b981';
+          entityTracker.style.boxShadow = '0 0 12px rgba(16, 185, 129, 0.8)';
+          entityLabel.style.background = '#10b981';
+          entityLabel.style.color = '#000';
+          entityLabel.innerText = `[ HUMAN DETECTED ${conf}% ]`;
+          entityTracker.style.display = 'block';
+        } else {
+          latestEntity = null;
+          entityTracker.style.display = 'none';
+        }
+      } catch (e) {
+        // CORS taint fallback if ESP32 lacks Access-Control-Allow-Origin
+      }
+    }
+
+    // === ANTI-BULB TEMPORAL FLICKER FIRE ENGINE ===
     function processOpticalVision() {
       const camImg = document.getElementById('camStream');
       if (!camImg.complete || camImg.naturalWidth === 0) return;
 
-      scanCanvas.width = camImg.naturalWidth;
-      scanCanvas.height = camImg.naturalHeight;
+      const W = 160;
+      const H = 120;
+      scanCanvas.width = W;
+      scanCanvas.height = H;
       
       try {
-          scanCtx.drawImage(camImg, 0, 0, scanCanvas.width, scanCanvas.height);
-          const frame = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+          scanCtx.drawImage(camImg, 0, 0, W, H);
+          const frame = scanCtx.getImageData(0, 0, W, H);
           const data = frame.data;
+          const currLumaMap = new Float32Array(W * H);
           
           let firePixelCount = 0;
+          let flickerDeltaSum = 0;
           let sumX = 0, sumY = 0;
-          let minX = scanCanvas.width, maxX = 0;
-          let minY = scanCanvas.height, maxY = 0;
+          let minX = W, maxX = 0;
+          let minY = H, maxY = 0;
           
-          // Ultra-High Precision: Har 2nd pixel scan karega
-          for (let y = 0; y < scanCanvas.height; y += 2) {
-              for (let x = 0; x < scanCanvas.width; x += 2) {
-                  let i = (y * scanCanvas.width + x) * 4;
-                  let r = data[i], g = data[i+1], b = data[i+2];
-                  
-                  // BROAD FIRE THRESHOLD (Lighter ki safed aag bhi pakdega)
-                  if ((r > 200 && g > 100 && b < 150) || (r > 240 && g > 240 && b > 200)) {
+          for (let y = 0; y < H; y++) {
+              for (let x = 0; x < W; x++) {
+                  const idx = y * W + x;
+                  const i = idx * 4;
+                  const r = data[i], g = data[i+1], b = data[i+2];
+                  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                  currLumaMap[idx] = luma;
+
+                  // Strict flame color signature (excludes plain white/cool LED bulbs)
+                  const isFlameHue = (r > 205 && g > 70 && g < 225 && b < 115 && (r - g) > 25 && (g - b) > 20);
+                  const isHotCore = (r > 240 && g > 205 && b > 110 && b < 195 && (r - b) > 55);
+
+                  if (isFlameHue || isHotCore) {
                       firePixelCount++;
                       sumX += x; sumY += y;
                       if (x < minX) minX = x;
                       if (x > maxX) maxX = x;
                       if (y < minY) minY = y;
                       if (y > maxY) maxY = y;
+
+                      if (prevLumaMap) {
+                          flickerDeltaSum += Math.abs(luma - prevLumaMap[idx]);
+                      }
                   }
               }
           }
-          
-          let visualFlameVal = Math.min(Math.round((firePixelCount / 1000) * 100), 100);
+          prevLumaMap = currLumaMap;
+
+          // Bulb Rejection Check: Bulbs have steady luminance (low flicker); real fire flickers
+          const avgFlicker = firePixelCount > 0 ? (flickerDeltaSum / firePixelCount) : 0;
+          const isRealFlame = (firePixelCount >= 14 && avgFlicker >= 5.5);
+
+          if (isRealFlame) {
+              fireStreak = Math.min(8, fireStreak + 1);
+          } else {
+              fireStreak = Math.max(0, fireStreak - 2);
+          }
+
+          const confirmedFire = fireStreak >= 2;
+          let visualFlameVal = confirmedFire ? Math.min(Math.round((firePixelCount / 220) * 100), 100) : 0;
           
           let simulatedGas = Math.floor(Math.random() * 20) + 400; 
           let simCpu = Math.floor(Math.random() * 15) + 40;
@@ -452,19 +639,18 @@
           const camAlert = document.getElementById('camAlert');
           const tracker = document.getElementById('aiTracker');
 
-          // Sirf 1-2 pixel aag dikhte hi turant BOX dikhayega
-          if (firePixelCount > 2) { 
+          if (confirmedFire) { 
               let avgX = sumX / firePixelCount;
               let avgY = sumY / firePixelCount;
               
-              let scaleX = camImg.clientWidth / scanCanvas.width;
-              let scaleY = camImg.clientHeight / scanCanvas.height;
+              let scaleX = camImg.clientWidth / W;
+              let scaleY = camImg.clientHeight / H;
               
               let targetX = avgX * scaleX;
               let targetY = avgY * scaleY;
               
-              let boxW = Math.max((maxX - minX) * scaleX + 60, 90);
-              let boxH = Math.max((maxY - minY) * scaleY + 60, 90);
+              let boxW = Math.max((maxX - minX) * scaleX + 50, 85);
+              let boxH = Math.max((maxY - minY) * scaleY + 50, 85);
 
               tracker.style.left = targetX + 'px';
               tracker.style.top = targetY + 'px';
@@ -472,19 +658,40 @@
               tracker.style.height = boxH + 'px';
               tracker.style.marginLeft = -(boxW/2) + 'px';
               tracker.style.marginTop = -(boxH/2) + 'px';
-              
               tracker.style.display = 'block'; 
               
               camAlert.innerHTML = "[ HAZARD ] OPTICAL FIRE DETECTED!";
               camAlert.style.background = "rgba(255, 0, 85, 0.15)";
               camAlert.style.color = "#ff0055";
+              camAlert.style.borderColor = "#ff0055";
               
-              analyzeHazardWithAI();
+              analyzeHazardWithAI('FIRE', `FLICKER ${avgFlicker.toFixed(1)}Hz`);
           } else {
-              tracker.style.display = 'none'; 
-              camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
-              camAlert.style.background = "rgba(16, 185, 129, 0.15)";
-              camAlert.style.color = "#10b981";
+              tracker.style.display = 'none';
+
+              if (latestEntity && latestEntity.type === 'WILDLIFE') {
+                  camAlert.innerHTML = `[ ALERT ] WILDLIFE: ${latestEntity.label}`;
+                  camAlert.style.background = "rgba(251, 191, 36, 0.15)";
+                  camAlert.style.color = "#fbbf24";
+                  camAlert.style.borderColor = "#fbbf24";
+                  analyzeHazardWithAI('WILDLIFE', latestEntity.label);
+              } else if (latestEntity && latestEntity.type === 'HUMAN') {
+                  camAlert.innerHTML = `[ VERIFIED ] ${latestEntity.label}`;
+                  camAlert.style.background = "rgba(16, 185, 129, 0.15)";
+                  camAlert.style.color = "#10b981";
+                  camAlert.style.borderColor = "#10b981";
+                  analyzeHazardWithAI('HUMAN', latestEntity.label);
+              } else if (firePixelCount >= 14 && avgFlicker < 5.5) {
+                  camAlert.innerHTML = "[ SAFE ] STATIC BULB FILTERED";
+                  camAlert.style.background = "rgba(0, 229, 255, 0.1)";
+                  camAlert.style.color = "#00e5ff";
+                  camAlert.style.borderColor = "#00e5ff";
+              } else {
+                  camAlert.innerHTML = "[ ACTIVE ] OPTICAL AI SCANNING STARTED";
+                  camAlert.style.background = "rgba(16, 185, 129, 0.15)";
+                  camAlert.style.color = "#10b981";
+                  camAlert.style.borderColor = "#10b981";
+              }
           }
       } catch (e) {
           console.error(e);
